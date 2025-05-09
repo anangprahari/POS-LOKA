@@ -1,5 +1,28 @@
 <!-- Navbar -->
-  <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+<style>
+  /* Hover efek orange */
+.sidebar .nav-link:hover {
+    background-color: #ff660e !important; /* Warna oranye kamu */
+    color: #fff !important;
+}
+
+.sidebar .nav-link:hover .nav-icon {
+    color: #fff !important;
+}
+
+/* Aktif menu */
+.sidebar .nav-link.active {
+    background-color: #ff660e !important;
+    color: #fff !important;
+    font-weight: bold;
+}
+
+.sidebar .nav-link.active .nav-icon {
+    color: #fff !important;
+}
+
+  </style>  
+<nav class="main-header navbar navbar-expand navbar-white navbar-light">
     <!-- Left navbar links -->
     <ul class="navbar-nav">
       <li class="nav-item">

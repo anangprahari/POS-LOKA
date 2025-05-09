@@ -1,88 +1,64 @@
 <!-- Main Sidebar Container -->
-<aside class="main-sidebar sidebar-dark-primary elevation-4">
+<aside class="main-sidebar sidebar-light-primary elevation-3" style="position: fixed; height: 100vh;">
     <!-- Brand Logo -->
-    <a href="{{route('home')}}" class="brand-link">
-        <img src="{{ asset('images/logo.png') }}" alt="AdminLTE Logo" class="brand-image img-circle elevation-3"
-             style="opacity: .8">
-        <span class="brand-text font-weight-light">{{ config('app.name') }}</span>
+    <a href="{{ route('home') }}" class="brand-link d-flex align-items-center justify-content-start bg-white shadow-sm">
+        <img src="{{ asset('images/kopi-loka-favicon.png') }}" alt="Logo" class="brand-image img-circle elevation-2" style="height: 35px;">
+       <span class="brand-text ml-2" style="color: #FF6600; font-weight: 800;">
+    {{ config('app.name') }}
+</span>
     </a>
 
     <!-- Sidebar -->
     <div class="sidebar">
-        <!-- Sidebar user (optional) -->
-        <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+        <!-- Sidebar user -->
+        <div class="user-panel mt-3 pb-3 mb-3 d-flex align-items-center">
             <div class="image">
-                <img src="{{ auth()->user()->getAvatar() }}" class="img-circle elevation-2" alt="User Image">
+                <img src="{{ auth()->user()->getAvatar() }}" class="img-circle elevation-2" alt="User Image" style="height: 35px;">
             </div>
             <div class="info">
-                <a href="#" class="d-block">{{ auth()->user()->getFullname() }}</a>
+                <a href="#" class="d-block text-sm text-dark">{{ auth()->user()->getFullname() }}</a>
             </div>
         </div>
 
         <!-- Sidebar Menu -->
         <nav class="mt-2">
-            <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-                <li class="nav-item has-treeview">
-                    <a href="{{route('home')}}" class="nav-link">
-                        <i class="nav-icon fas fa-tachometer-alt"></i>
-                        <p>{{ __('dashboard.title') }}</p>
-                    </a>
-                </li>
-                <li class="nav-item has-treeview">
-                    <a href="{{ route('products.index') }}" class="nav-link {{ activeSegment('products') }}">
-                        <i class="nav-icon fas fa-th-large"></i>
-                        <p>{{ __('product.title') }}</p>
-                    </a>
-                </li>
-                <li class="nav-item has-treeview">
-                    <a href="{{ route('cart.index') }}" class="nav-link {{ activeSegment('cart') }}">
-                        <i class="nav-icon fas fa-cart-plus"></i>
-                        <p>{{ __('cart.title') }}</p>
-                    </a>
-                </li>
-                {{--
-                <li class="nav-item has-treeview">
-                    <a href="#" class="nav-link {{ activeSegment('Purchase') }}">
-                        <i class="nav-icon fas fa-cart-plus"></i>
-                        <p>{{ __('Purchase') }}</p>
-                    </a>
-                </li>--}}
-                <li class="nav-item has-treeview">
-                    <a href="{{ route('orders.index') }}" class="nav-link {{ activeSegment('orders') }}">
-                        <i class="nav-icon fas fa-cart-plus"></i>
-                        <p>{{ __('order.title') }}</p>
-                    </a>
-                </li>
-                <li class="nav-item has-treeview">
-                    <a href="{{ route('customers.index') }}" class="nav-link {{ activeSegment('customers') }}">
-                        <i class="nav-icon fas fa-users"></i>
-                        <p>{{ __('customer.title') }}</p>
-                    </a>
-                </li>
-                <li class="nav-item has-treeview">
-                    <a href="{{ route('suppliers.index') }}" class="nav-link {{ activeSegment('supplier') }}">
-                        <i class="nav-icon fas fa-users"></i>
-                        <p>{{ __('Supplier') }}</p>
-                    </a>
-                </li>
-                <li class="nav-item has-treeview">
-                    <a href="{{ route('settings.index') }}" class="nav-link {{ activeSegment('settings') }}">
-                        <i class="nav-icon fas fa-cogs"></i>
-                        <p>{{ __('settings.title') }}</p>
-                    </a>
-                </li>
+            <ul class="nav nav-pills nav-sidebar flex-column" 
+                data-widget="treeview" role="menu" data-accordion="false">
+
+                @php
+                    $menus = [
+                        ['route' => 'home', 'icon' => 'fas fa-tachometer-alt', 'label' => __('dashboard.title')],
+                        ['route' => 'products.index', 'icon' => 'fas fa-th-large', 'label' => __('product.title'), 'segment' => 'products'],
+                        ['route' => 'cart.index', 'icon' => 'fas fa-cart-plus', 'label' => __('cart.title'), 'segment' => 'cart'],
+                        ['route' => 'orders.index', 'icon' => 'fas fa-shopping-basket', 'label' => __('order.title'), 'segment' => 'orders'],
+                        ['route' => 'customers.index', 'icon' => 'fas fa-users', 'label' => __('customer.title'), 'segment' => 'customers'],
+                        ['route' => 'suppliers.index', 'icon' => 'fas fa-people-carry', 'label' => __('Supplier'), 'segment' => 'supplier'],
+                        ['route' => 'settings.index', 'icon' => 'fas fa-cogs', 'label' => __('settings.title'), 'segment' => 'settings'],
+                    ];
+                @endphp
+
+                @foreach ($menus as $menu)
                 <li class="nav-item">
-                    <a href="#" class="nav-link" onclick="document.getElementById('logout-form').submit()">
+                    <a href="{{ route($menu['route']) }}" 
+                       class="nav-link {{ isset($menu['segment']) ? activeSegment($menu['segment']) : '' }}">
+                        <i class="nav-icon {{ $menu['icon'] }}"></i>
+                        <p>{{ $menu['label'] }}</p>
+                    </a>
+                </li>
+                @endforeach
+
+                <!-- Logout -->
+                <li class="nav-item mt-3">
+                    <a href="#" class="nav-link text-danger" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                         <i class="nav-icon fas fa-sign-out-alt"></i>
                         <p>{{ __('common.Logout') }}</p>
-                        <form action="{{route('logout')}}" method="POST" id="logout-form">
-                            @csrf
-                        </form>
                     </a>
+                    <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                        @csrf
+                    </form>
                 </li>
+
             </ul>
         </nav>
-        <!-- /.sidebar-menu -->
     </div>
-    <!-- /.sidebar -->
 </aside>

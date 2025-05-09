@@ -77,7 +77,11 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
-        //
+        if (request()->wantsJson()) {
+            return new ProductResource($product);
+        }
+
+        return view('products.show')->with('product', $product);
     }
 
     /**
@@ -141,4 +145,6 @@ class ProductController extends Controller
             'success' => true
         ]);
     }
+
+    
 }

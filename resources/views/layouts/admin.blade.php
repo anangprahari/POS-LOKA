@@ -6,6 +6,8 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>@yield('title', config('app.name'))</title>
     <!-- Tell the browser to be responsive to screen width -->
+    <link rel="icon" type="image/png" href="{{ asset('images/favicon-32x32.png') }}">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- Ionicons -->
     <!-- <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css"> -->
