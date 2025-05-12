@@ -23,6 +23,8 @@ Route::prefix('admin')->middleware('auth')->group(function () {
     Route::post('/settings', [SettingController::class, 'store'])->name('settings.store');
     Route::resource('products', ProductController::class);
     Route::resource('customers', CustomerController::class);
+    Route::get('/orders/recent', [OrderController::class, 'recent'])->name('orders.recent');
+    Route::get('/admin/orders/{id}/print', [OrderController::class, 'printInvoice'])->name('orders.print');
     Route::resource('orders', OrderController::class);
     Route::resource('suppliers', SupplierController::class);
 

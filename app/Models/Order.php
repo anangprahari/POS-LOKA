@@ -8,7 +8,11 @@ class Order extends Model
 {
     protected $fillable = [
         'customer_id',
-        'user_id'
+        'user_id',
+        'payment_method',
+        'note',
+        'discount',
+        'discount_type'
     ];
 
     public function items()
@@ -34,11 +38,27 @@ class Order extends Model
         return __('customer.working');
     }
 
-    public function total()
+    public function subtotal()
     {
         return $this->items->map(function ($i) {
             return $i->price;
         })->sum();
+    }
+
+    public function discountAmount()
+    {
+        $subtotal = $this->subtotal();
+
+        if ($this->discount_type === 'percentage') {
+            return ($subtotal * $this->discount) / 100;
+        }
+
+        return $this->discount ?? 0;
+    }
+
+    public function total()
+    {
+        return $this->subtotal() - $this->discountAmount();
     }
 
     public function formattedTotal()
@@ -56,5 +76,10 @@ class Order extends Model
     public function formattedReceivedAmount()
     {
         return number_format($this->receivedAmount(), 2);
+    }
+
+    public function change()
+    {
+        return max(0, $this->receivedAmount() - $this->total());
     }
 }
