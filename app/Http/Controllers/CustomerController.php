@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CustomerStoreRequest;
 use App\Models\Customer;
+use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class CustomerController extends Controller
 {
@@ -21,8 +23,49 @@ class CustomerController extends Controller
                 Customer::all()
             );
         }
+
         $customers = Customer::latest()->paginate(10);
-        return view('customers.index')->with('customers', $customers);
+
+        // Calculate customer statistics for dashboard
+        $stats = [
+            'total' => Customer::count(),
+            'new' => Customer::where('created_at', '>=', now()->subDays(30))->count(),
+            'returning' => $this->getReturningCustomersCount(),
+            'vip' => $this->getVIPCustomersCount()
+        ];
+
+        return view('customers.index', compact('customers', 'stats'));
+    }
+
+    /**
+     * Get returning customers count based on multiple purchases
+     * 
+     * @return int
+     */
+    private function getReturningCustomersCount()
+    {
+        return DB::table('customers')
+            ->join('orders', 'customers.id', '=', 'orders.customer_id')
+            ->select('customers.id')
+            ->groupBy('customers.id')
+            ->havingRaw('COUNT(orders.id) > 1')
+            ->count();
+    }
+
+    /**
+     * Get VIP customers count based on specific criteria
+     * Total purchases exceeding $100,000 or more than 5 purchases
+     * 
+     * @return int
+     */
+    private function getVIPCustomersCount()
+    {
+        return DB::table('customers')
+            ->join('orders', 'customers.id', '=', 'orders.customer_id')
+            ->select('customers.id')
+            ->groupBy('customers.id')
+            ->havingRaw('SUM(orders.total_amount) > 100000 OR COUNT(orders.id) > 5')
+            ->count();
     }
 
     /**
@@ -71,7 +114,25 @@ class CustomerController extends Controller
      * @param  \App\Models\Customer  $customer
      * @return \Illuminate\Http\Response
      */
-    public function show(Customer $customer) {}
+    public function show(Customer $customer)
+    {
+        // Load customer's orders
+        $customer->load('orders');
+
+        // Calculate customer stats
+        $stats = [
+            'total_spent' => $customer->orders->sum('total_amount'),
+            'order_count' => $customer->orders->count(),
+            'last_order' => $customer->getLastOrderDate(),
+            'is_vip' => $customer->isVipCustomer(),
+            'is_returning' => $customer->isReturningCustomer()
+        ];
+
+        return response()->json([
+            'customer' => $customer,
+            'stats' => $stats
+        ]);
+    }
 
     /**
      * Show the form for editing the specified resource.
@@ -116,6 +177,12 @@ class CustomerController extends Controller
         return redirect()->route('customers.index')->with('success', __('customer.success_updating'));
     }
 
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  \App\Models\Customer  $customer
+     * @return \Illuminate\Http\Response
+     */
     public function destroy(Customer $customer)
     {
         if ($customer->avatar) {

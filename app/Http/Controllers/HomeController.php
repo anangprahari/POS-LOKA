@@ -20,12 +20,17 @@ class HomeController extends Controller
     }
 
     /**
-     * Show the application dashboard.
+     * Show the application dashboard for admin.
      *
      * @return \Illuminate\Contracts\Support\Renderable
      */
     public function index()
     {
+        // Pastikan user adalah admin
+        if (auth()->user()->role !== 'admin') {
+            return redirect()->route('user.dashboard');
+        }
+
         $orders = Order::with(['items', 'payments'])->get();
         $customers_count = Customer::count();
 
@@ -128,7 +133,6 @@ class HomeController extends Controller
             ->havingRaw('SUM(order_items.quantity) > 1000') // Hot product threshold for past 6 months
             ->get();
 
-
         return view('home', [
             'orders_count' => $orders->count(),
             'income' => $orders->map(function ($i) {
@@ -142,6 +146,28 @@ class HomeController extends Controller
             'best_selling_products' => $bestSellingProducts,
             'current_month_products' => $currentMonthBestSelling,
             'past_months_products' => $pastSixMonthsHotProducts,
+        ]);
+    }
+
+    /**
+     * Show dashboard for regular users.
+     *
+     * @return \Illuminate\Contracts\Support\Renderable
+     */
+    public function userDashboard()
+    {
+        // Data sederhana untuk user dashboard
+        $customers_count = Customer::count();
+
+        // Hanya tampilkan recent orders jika diperlukan
+        $recent_orders = Order::with(['items'])
+            ->latest()
+            ->take(5)
+            ->get();
+
+        return view('user.dashboard', [
+            'customers_count' => $customers_count,
+            'recent_orders' => $recent_orders
         ]);
     }
 }

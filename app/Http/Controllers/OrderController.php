@@ -11,32 +11,61 @@ class OrderController extends Controller
 {
     public function index(Request $request)
     {
-        $orders = new Order();
+        // Create query builder instance without pagination
+        $ordersQuery = new Order();
+
+        // Apply date filters if provided
         if ($request->start_date) {
-            $orders = $orders->where('created_at', '>=', $request->start_date);
+            $ordersQuery = $ordersQuery->where('created_at', '>=', $request->start_date);
         }
         if ($request->end_date) {
-            $orders = $orders->where('created_at', '<=', $request->end_date . ' 23:59:59');
+            $ordersQuery = $ordersQuery->where('created_at', '<=', $request->end_date . ' 23:59:59');
         }
-        $orders = $orders->with(['items.product', 'payments', 'customer'])->latest()->paginate(10);
 
-        $subtotalSum = $orders->sum(function ($order) {
-            return $order->subtotal();
-        });
+        // First calculate totals from all matching orders (without pagination)
+        $allOrders = clone $ordersQuery;
 
-        $discountSum = $orders->sum(function ($order) {
-            return $order->discountAmount();
-        });
+        // Get total counts for the dashboard
+        $totalOrders = $allOrders->count();
 
-        $total = $orders->sum(function ($order) {
-            return $order->total();
-        });
+        // Use DB aggregate queries for better performance on large datasets
+        $totals = $allOrders->selectRaw('
+            COUNT(*) as total_count,
+            SUM(CASE WHEN discount_type = "percentage" THEN 
+                (SELECT SUM(items.price) FROM order_items as items WHERE items.order_id = orders.id) * discount / 100
+                ELSE discount END) as total_discount
+        ')->first();
 
-        $receivedAmount = $orders->sum(function ($order) {
-            return $order->receivedAmount();
-        });
+        // Calculate total for all orders using relationships and raw queries
+        $orderIds = $allOrders->pluck('id')->toArray();
 
-        return view('orders.index', compact('orders', 'subtotalSum', 'discountSum', 'total', 'receivedAmount'));
+        // Get subtotal using order items
+        $subtotalSum = DB::table('order_items')
+            ->whereIn('order_id', $orderIds)
+            ->sum('price');
+
+        // Get total discount amount
+        $discountSum = $totals->total_discount ?? 0;
+
+        // Calculate total amount (subtotal - discount)
+        $total = $subtotalSum - $discountSum;
+
+        // Get received amount
+        $receivedAmount = DB::table('payments')
+            ->whereIn('order_id', $orderIds)
+            ->sum('amount');
+
+        // Now get the paginated orders for displaying in the table
+        $orders = $ordersQuery->with(['items.product', 'payments', 'customer'])->latest()->paginate(10);
+
+        return view('orders.index', compact(
+            'orders',
+            'subtotalSum',
+            'discountSum',
+            'total',
+            'receivedAmount',
+            'totalOrders'
+        ));
     }
 
     public function store(OrderStoreRequest $request)

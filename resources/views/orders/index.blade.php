@@ -3,113 +3,571 @@
 @section('title', __('order.Orders_List'))
 @section('content-header', __('order.Orders_List'))
 @section('content-actions')
-<a href="{{route('cart.index')}}" class="btn btn-primary">{{ __('cart.title') }}</a>
+<a href="{{route('cart.index')}}" class="btn btn-orange">{{ __('cart.title') }}</a>
 @endsection
+
+@section('css')
+<style>
+/* Modern UI Elements & Card Styling */
+.card {
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    overflow: hidden;
+    border: none;
+    margin-bottom: 30px;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    padding: 20px;
+    background-color: white;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    background-color: #f8f9fa;
+    border-top: none;
+    font-weight: 600;
+    color: #495057;
+    padding: 15px;
+    font-size: 0.9rem;
+}
+
+.table td {
+    padding: 15px;
+    vertical-align: middle;
+}
+
+.table-hover tbody tr {
+    transition: all 0.2s ease;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(52, 152, 219, 0.05);
+    transform: translateY(-1px);
+}
+
+.badge-custom {
+    display: inline-block;
+    padding: 6px 16px;
+    font-weight: 500;
+    border-radius: 30px;
+    font-size: 0.8rem;
+    text-align: center;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+}
+
+.badge-custom.not-paid {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.badge-custom.partial {
+    background-color: #f39c12;
+    color: white;
+}
+
+.badge-custom.paid {
+    background-color: #2ecc71;
+    color: white;
+}
+
+.badge-custom.change {
+    background-color: #3498db;
+    color: white;
+}
+
+.btn {
+    border-radius: 8px;
+    padding: 8px 16px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.btn i {
+    margin-right: 5px;
+}
+
+.btn-orange {
+    background: linear-gradient(135deg, #ff6600 0%, #ff4500 100%);
+    border: none;
+    color: white;
+    box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3);
+}
+
+.btn-orange:hover {
+    background: linear-gradient(135deg, #ff4500 0%, #ff3300 100%);
+    box-shadow: 0 6px 20px rgba(255, 102, 0, 0.4);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    border: none;
+    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #2980b9 0%, #1c6ca1 100%);
+    box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #7f8c8d 0%, #576574 100%);
+    border: none;
+    box-shadow: 0 4px 15px rgba(127, 140, 141, 0.3);
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, #576574 0%, #34495e 100%);
+    box-shadow: 0 6px 20px rgba(127, 140, 141, 0.4);
+    color: white;
+}
+
+/* Date Range Picker Styling */
+.date-range-container {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    padding: 20px;
+    margin-bottom: 20px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.date-range-container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.date-range-container input[type="date"] {
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 10px 15px;
+    transition: all 0.3s ease;
+}
+
+.date-range-container input[type="date"]:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.25);
+}
+
+.dashboard-card {
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    padding: 20px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.dashboard-card .card-icon {
+    font-size: 36px;
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    opacity: 0.2;
+}
+
+.dashboard-card .card-value {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 5px;
+    color: white;
+}
+
+.dashboard-card .card-title {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 15px;
+}
+
+.card-total-orders {
+    background-color: #3498db;
+    color: white;
+}
+
+.card-total-amount {
+    background-color: #2ecc71;
+    color: white;
+}
+
+.animated-bg {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+    z-index: 0;
+}
+
+.modal-content {
+    border-radius: 15px;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    border: none;
+}
+
+.modal-title {
+    font-weight: 600;
+}
+
+.modal-footer {
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.invoice-card {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.invoice-header {
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.invoice-body {
+    padding: 20px;
+}
+
+.invoice-customer {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.invoice-table th {
+    background-color: #f8f9fa;
+}
+
+.invoice-total {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.invoice-total-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px dashed rgba(0, 0, 0, 0.1);
+}
+
+.invoice-total-row:last-child {
+    border-bottom: none;
+}
+
+.invoice-total-row .total-label {
+    font-weight: 600;
+}
+
+.invoice-total-row .total-value {
+    font-weight: 700;
+}
+
+/* Pagination */
+.pagination {
+    margin-top: 20px;
+    justify-content: center;
+}
+
+.page-link {
+    border-radius: 50%;
+    margin: 0 5px;
+    color: #3498db;
+    border: none;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.page-link:hover {
+    background-color: #3498db;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+}
+
+.page-item.active .page-link {
+    background-color: #3498db;
+    border-color: #3498db;
+    box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+}
+
+/* Search Box */
+.search-box {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.search-box input {
+    border-radius: 30px;
+    padding: 12px 20px;
+    padding-left: 45px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.search-box input:focus {
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    border-color: #3498db;
+}
+
+.search-box i {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #999;
+}
+
+/* Alert styling */
+.alert {
+    border-radius: 12px;
+    border: none;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.alert-success {
+    background-color: #d4edda;
+    border-left: 4px solid #28a745;
+    color: #155724;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    border-left: 4px solid #dc3545;
+    color: #721c24;
+}
+
+.close {
+    font-size: 1.2rem;
+    opacity: 0.8;
+    transition: all 0.2s;
+}
+
+.close:hover {
+    opacity: 1;
+}
+</style>
+@endsection
+
 @section('content')
-<div class="card">
-    <div class="card-body">
-        <div class="row mb-3">
-            <div class="col-md-7">
-                @if(session('success'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        {{ session('success') }}
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                @endif
-                @if(session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        {{ session('error') }}
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                @endif
+<div class="row mb-3">
+    <div class="col-md-7">
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <strong><i class="fas fa-check-circle mr-2"></i></strong> {{ session('success') }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
-            <div class="col-md-5">
-                <form action="{{route('orders.index')}}">
-                    <div class="row">
-                        <div class="col-md-5">
-                            <input type="date" name="start_date" class="form-control" value="{{request('start_date')}}" />
-                        </div>
-                        <div class="col-md-5">
-                            <input type="date" name="end_date" class="form-control" value="{{request('end_date')}}" />
-                        </div>
-                        <div class="col-md-2">
-                            <button class="btn btn-outline-primary" type="submit">{{ __('order.submit') }}</button>
-                        </div>
-                    </div>
-                </form>
+        @endif
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <strong><i class="fas fa-exclamation-circle mr-2"></i></strong> {{ session('error') }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        @endif
+    </div>
+    <div class="col-md-5">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="orderSearch" class="form-control" placeholder="{{ __('Search Orders...') }}">
+        </div>
+    </div>
+</div>
+
+<div class="date-range-container">
+    <form action="{{route('orders.index')}}">
+        <div class="row align-items-center">
+            <div class="col-lg-3 col-md-4">
+                <h5 class="mb-0"><i class="fas fa-calendar-alt mr-2"></i> {{ __('Date Range') }}</h5>
+            </div>
+            <div class="col-lg-3 col-md-3">
+                <div class="form-group mb-0">
+                    <label for="start_date">{{ __('Start Date') }}</label>
+                    <input type="date" id="start_date" name="start_date" class="form-control" value="{{request('start_date')}}" />
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-3">
+                <div class="form-group mb-0">
+                    <label for="end_date">{{ __('End Date') }}</label>
+                    <input type="date" id="end_date" name="end_date" class="form-control" value="{{request('end_date')}}" />
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-2 text-right">
+                <button class="btn btn-primary" type="submit">
+                    <i class="fas fa-filter mr-1"></i> {{ __('order.submit') }}
+                </button>
             </div>
         </div>
-        <div class="table-responsive">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>{{ __('order.ID') }}</th>
-                        <th>{{ __('order.Customer_Name') }}</th>
-                        <th>{{ __('Subtotal') }}</th>
-                        <th>{{ __('Discount') }}</th>
-                        <th>{{ __('order.Total') }}</th>
-                        <th>{{ __('order.Created_At') }}</th>
-                        <th>{{ __('order.Actions') }}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($orders as $order)
-                    <tr>
-                        <td>{{$order->id}}</td>
-                        <td>{{$order->getCustomerName()}}</td>
-                        <td>{{ config('settings.currency_symbol') }} {{number_format($order->subtotal(), 2)}}</td>
-                        <td>
-                            @if($order->discount > 0)
-                                @if($order->discount_type == 'percentage')
+    </form>
+</div>
+
+<div class="row mb-4">
+    <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
+        <div class="dashboard-card card-total-orders">
+            <div class="animated-bg"></div>
+            <div class="card-icon">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <div class="card-value">{{ $orders->total() }}</div>
+            <div class="card-title">{{ __('Total Orders') }}</div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
+        <div class="dashboard-card card-total-amount">
+            <div class="animated-bg"></div>
+            <div class="card-icon">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+            <div class="card-value">{{ config('settings.currency_symbol') }} {{ number_format($total, 2) }}</div>
+            <div class="card-title">{{ __('Total Amount') }}</div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
+        <div class="dashboard-card" style="background-color: #f39c12; color: white;">
+            <div class="animated-bg"></div>
+            <div class="card-icon">
+                <i class="fas fa-tag"></i>
+            </div>
+            <div class="card-value">{{ config('settings.currency_symbol') }} {{ number_format($discountSum, 2) }}</div>
+            <div class="card-title">{{ __('Total Discount') }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-header">
+        <h3>{{ __('order.Orders_List') }}</h3>
+    </div>
+    <div class="card-body table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>{{ __('order.ID') }}</th>
+                    <th>{{ __('order.Customer_Name') }}</th>
+                    <th>{{ __('Subtotal') }}</th>
+                    <th>{{ __('Discount') }}</th>
+                    <th>{{ __('order.Total') }}</th>
+                    <th>{{ __('order.Created_At') }}</th>
+                    <th class="text-center">{{ __('order.Actions') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($orders as $order)
+                <tr>
+                    <td>{{$order->id}}</td>
+                    <td>{{$order->getCustomerName()}}</td>
+                    <td>{{ config('settings.currency_symbol') }} {{number_format($order->subtotal(), 2)}}</td>
+                    <td>
+                        @if($order->discount > 0)
+                            @if($order->discount_type == 'percentage')
+                                <span class="badge-custom" style="background-color: #f39c12;">
                                     {{ $order->discount }}% ({{ config('settings.currency_symbol') }} {{number_format($order->discountAmount(), 2)}})
-                                @else
-                                    {{ config('settings.currency_symbol') }} {{number_format($order->discount, 2)}}
-                                @endif
+                                </span>
                             @else
-                                {{ config('settings.currency_symbol') }} 0.00
+                                <span class="badge-custom" style="background-color: #f39c12;">
+                                    {{ config('settings.currency_symbol') }} {{number_format($order->discount, 2)}}
+                                </span>
                             @endif
-                        </td>
-                        <td>{{ config('settings.currency_symbol') }} {{$order->formattedTotal()}}</td>
-                        <td>{{$order->created_at->format('Y-m-d H:i')}}</td>
-                        <td>
-                            <div class="btn-group">
-                                <button
-                                    class="btn btn-sm btn-secondary btnShowInvoice"
-                                    data-toggle="modal"
-                                    data-target="#modalInvoice"
-                                    data-order-id="{{ $order->id }}"
-                                    data-customer-name="{{ $order->getCustomerName() }}"
-                                    data-subtotal="{{ $order->subtotal() }}"
-                                    data-discount="{{ $order->discount }}"
-                                    data-discount-type="{{ $order->discount_type }}"
-                                    data-discount-amount="{{ $order->discountAmount() }}"
-                                    data-total="{{ $order->total() }}"
-                                    data-items="{{ json_encode($order->items->load('product')) }}"
-                                    data-created-at="{{ $order->created_at }}">
-                                    <ion-icon name="eye"></ion-icon>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <th colspan="2" class="text-right">{{ __('Subtotal') }}:</th>
-                        <th>{{ config('settings.currency_symbol') }} {{ number_format($subtotalSum, 2) }}</th>
-                        <th>{{ config('settings.currency_symbol') }} {{ number_format($discountSum, 2) }}</th>
-                        <th>{{ config('settings.currency_symbol') }} {{ number_format($total, 2) }}</th>
-                        <th></th>
-                        <th></th>
-                    </tr>
-                </tfoot>
-            </table>
-        </div>
-        <div class="mt-3">
+                        @else
+                            {{ config('settings.currency_symbol') }} 0.00
+                        @endif
+                    </td>
+                    <td>{{ config('settings.currency_symbol') }} {{$order->formattedTotal()}}</td>
+                    <td>{{$order->created_at->format('Y-m-d H:i')}}</td>
+                    <td class="text-center">
+                        <div class="btn-group">
+                            <button
+                                class="btn btn-sm btn-info btnShowInvoice"
+                                data-toggle="modal"
+                                data-target="#modalInvoice"
+                                data-order-id="{{ $order->id }}"
+                                data-customer-name="{{ $order->getCustomerName() }}"
+                                data-subtotal="{{ $order->subtotal() }}"
+                                data-discount="{{ $order->discount }}"
+                                data-discount-type="{{ $order->discount_type }}"
+                                data-discount-amount="{{ $order->discountAmount() }}"
+                                data-total="{{ $order->total() }}"
+                                data-items="{{ json_encode($order->items->load('product')) }}"
+                                data-created-at="{{ $order->created_at }}">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="2" class="text-right">{{ __('Subtotal') }}:</th>
+                    <th>{{ config('settings.currency_symbol') }} {{ number_format($subtotalSum, 2) }}</th>
+                    <th>{{ config('settings.currency_symbol') }} {{ number_format($discountSum, 2) }}</th>
+                    <th>{{ config('settings.currency_symbol') }} {{ number_format($total, 2) }}</th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    <div class="card-footer">
+        <div class="d-flex justify-content-center">
             {{ $orders->appends(request()->except('page'))->render() }}
         </div>
     </div>
@@ -122,7 +580,9 @@
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modalInvoiceLabel">{{ config('app.name') }} - Invoice</h5>
+                <h5 class="modal-title" id="modalInvoiceLabel">
+                    <i class="fas fa-file-invoice mr-2"></i> {{ config('app.name') }} - Invoice
+                </h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -131,9 +591,11 @@
                 <!-- Placeholder for dynamic content -->
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times mr-1"></i> Close
+                </button>
                 <button type="button" class="btn btn-primary" id="btnPrintInvoice">
-                    <ion-icon name="print"></ion-icon> Print
+                    <i class="fas fa-print mr-1"></i> Print
                 </button>
             </div>
         </div>
@@ -144,8 +606,29 @@
 @section('js')
 <script src="https://unpkg.com/ionicons@4.5.10-0/dist/ionicons.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 <script>
     $(document).ready(function() {
+        // Animation for dashboard cards
+        setTimeout(function() {
+            $('.dashboard-card').each(function(index) {
+                setTimeout(() => {
+                    $(this).css({
+                        'opacity': 1,
+                        'transform': 'translateY(0)'
+                    });
+                }, index * 100);
+            });
+        }, 300);
+
+        // Search functionality
+        $("#orderSearch").on("keyup", function() {
+            var value = $(this).val().toLowerCase();
+            $("table tbody tr").filter(function() {
+                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+            });
+        });
+
         // Event handler untuk modal Invoice
         $(document).on('click', '.btnShowInvoice', function(event) {
             console.log("Modal show event triggered!");
@@ -162,9 +645,6 @@
             var createdAt = button.data('created-at');
             var items = button.data('items');
 
-            // Buka modal
-            $('#modalInvoice').modal('show');
-
             // Menyiapkan HTML untuk item
             var itemsHTML = '';
             if (items && items.length) {
@@ -175,9 +655,9 @@
                             <td>${index + 1}</td>
                             <td>${item.product.name}</td>
                             <td>${item.product.description || 'N/A'}</td>
-                            <td>${parseFloat(unitPrice).toFixed(2)}</td>
-                            <td>${item.quantity}</td>
-                            <td>${parseFloat(item.price).toFixed(2)}</td>
+                            <td class="text-right">${parseFloat(unitPrice).toFixed(2)}</td>
+                            <td class="text-center">${item.quantity}</td>
+                            <td class="text-right">${parseFloat(item.price).toFixed(2)}</td>
                         </tr>
                     `;
                 });
@@ -198,55 +678,51 @@
             // Update konten modal
             var modalBody = $('#modalInvoice').find('.modal-body');
             modalBody.html(`
-                <div id="invoice-content" class="card">
-                    <div class="card-header">
-                        Invoice <strong>#${orderId}</strong>
+                <div id="invoice-content" class="invoice-card">
+                    <div class="invoice-header">
+                        <div>
+                            <h4 class="mb-0">Invoice <strong>#${orderId}</strong></h4>
+                            <small class="text-muted">Created: ${new Date(createdAt).toLocaleString()}</small>
+                        </div>
+                        <div>
+                            <h5 class="mb-0">{{ config('app.name') }}</h5>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <div class="row mb-4">
-                            <div class="col-sm-6">
-                                <h6 class="mb-3">Customer:</h6>
-                                <div><strong>${customerName || 'General Customer'}</strong></div>
-                                <div>Order Date: ${new Date(createdAt).toLocaleString()}</div>
-                                <div>Invoice #: ${orderId}</div>
-                            </div>
-                            <div class="col-sm-6 text-right">
-                                <h6 class="mb-3">Company:</h6>
-                                <div><strong>{{ config('app.name') }}</strong></div>
-                                <div>{{ config('settings.store_address') }}</div>
-                                <div>{{ config('settings.store_phone') }}</div>
-                            </div>
+                    <div class="invoice-body">
+                        <div class="invoice-customer">
+                            <h6 class="mb-2">Customer Information:</h6>
+                            <strong>${customerName || 'General Customer'}</strong>
                         </div>
                         <div class="table-responsive-sm">
-                            <table class="table table-striped">
+                            <table class="table table-striped invoice-table">
                                 <thead>
                                     <tr>
                                         <th>#</th>
                                         <th>Item</th>
                                         <th>Description</th>
-                                        <th>Unit Cost</th>
-                                        <th>Qty</th>
-                                        <th>Total</th>
+                                        <th class="text-right">Unit Cost</th>
+                                        <th class="text-center">Qty</th>
+                                        <th class="text-right">Total</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     ${itemsHTML}
                                 </tbody>
-                                <tfoot>
-                                  <tr>
-                                    <th class="text-right" colspan="5">Subtotal</th>
-                                    <th>{{ config('settings.currency_symbol') }} ${subtotal.toFixed(2)}</th>
-                                  </tr>
-                                  <tr>
-                                    <th class="text-right" colspan="5">Discount</th>
-                                    <th>${discountDisplay}</th>
-                                  </tr>
-                                  <tr>
-                                    <th class="text-right" colspan="5">Total</th>
-                                    <th>{{ config('settings.currency_symbol') }} ${totalAmount.toFixed(2)}</th>
-                                  </tr>
-                                </tfoot>
                             </table>
+                        </div>
+                        <div class="invoice-total">
+                            <div class="invoice-total-row">
+                                <div class="total-label">Subtotal:</div>
+                                <div class="total-value">{{ config('settings.currency_symbol') }} ${subtotal.toFixed(2)}</div>
+                            </div>
+                            <div class="invoice-total-row">
+                                <div class="total-label">Discount:</div>
+                                <div class="total-value">${discountDisplay}</div>
+                            </div>
+                            <div class="invoice-total-row">
+                                <div class="total-label">Total:</div>
+                                <div class="total-value">{{ config('settings.currency_symbol') }} ${totalAmount.toFixed(2)}</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -272,18 +748,36 @@
                             body { 
                                 margin: 0;
                                 padding: 10mm;
+                                font-family: Arial, sans-serif;
                             }
-                            .card {
-                                border: none;
+                            .invoice-card {
+                                border: 1px solid #ddd;
+                                border-radius: 8px;
+                                overflow: hidden;
+                                margin-bottom: 20px;
                             }
-                            .card-header, .card-body {
-                                padding: 0;
-                                margin-bottom: 10mm;
+                            .invoice-header {
+                                background-color: #f8f9fa;
+                                padding: 20px;
+                                border-bottom: 1px solid #ddd;
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
+                            }
+                            .invoice-body {
+                                padding: 20px;
+                            }
+                            .invoice-customer {
+                                background-color: #f8f9fa;
+                                padding: 15px;
+                                border-radius: 8px;
+                                margin-bottom: 20px;
                             }
                             .table {
                                 width: 100%;
                                 margin-bottom: 1rem;
                                 color: #212529;
+                                border-collapse: collapse;
                             }
                             .table th,
                             .table td {
@@ -294,15 +788,51 @@
                             .table thead th {
                                 vertical-align: bottom;
                                 border-bottom: 2px solid #dee2e6;
+                                background-color: #f8f9fa;
                             }
                             .text-right {
                                 text-align: right !important;
+                            }
+                            .text-center {
+                                text-align: center !important;
+                            }
+                            .invoice-total {
+                                background-color: #f8f9fa;
+                                padding: 15px;
+                                border-radius: 8px;
+                                margin-top: 20px;
+                            }
+                            .invoice-total-row {
+                                display: flex;
+                                justify-content: space-between;
+                                padding: 8px 0;
+                                border-bottom: 1px dashed #dee2e6;
+                            }
+                            .invoice-total-row:last-child {
+                                border-bottom: none;
+                            }
+                            .invoice-total-row .total-label {
+                                font-weight: 600;
+                            }
+                            .invoice-total-row .total-value {
+                                font-weight: 700;
+                            }
+                            .invoice-footer {
+                                text-align: center;
+                                margin-top: 30px;
+                                padding-top: 20px;
+                                border-top: 1px solid #dee2e6;
+                                font-size: 0.9em;
                             }
                         }
                     </style>
                 </head>
                 <body>
                     ${$('#invoice-content').prop('outerHTML')}
+                    <div class="invoice-footer">
+                        <p>Thank you for your business!</p>
+                        <p class="small">{{ config('app.name') }} &copy; ${new Date().getFullYear()}</p>
+                    </div>
                     <script>
                         window.onload = function() {
                             window.print();
@@ -317,6 +847,76 @@
             
             printWindow.document.close();
         });
+
+        // Add animation to table rows
+        $('table tbody tr').each(function(index) {
+            $(this).css({
+                'opacity': 0,
+                'transform': 'translateY(20px)'
+            });
+            
+            setTimeout(() => {
+                $(this).animate({
+                    'opacity': 1,
+                    'transform': 'translateY(0)'
+                }, 300);
+            }, 100 + (index * 50));
+        });
+
+        // Add pulse effect to cards on hover
+        $('.dashboard-card').hover(
+            function() {
+                $(this).find('.animated-bg').css({
+                    'background': 'radial-gradient(circle at center, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 70%)',
+                    'transform': 'scale(1)',
+                    'opacity': 1,
+                    'transition': 'all 0.5s ease'
+                });
+            },
+            function() {
+                $(this).find('.animated-bg').css({
+                    'transform': 'scale(1.5)',
+                    'opacity': 0,
+                    'transition': 'all 0.5s ease'
+                });
+            }
+        );
+
+        // Responsive adjustments
+        function adjustUIForScreenSize() {
+            if ($(window).width() < 768) {
+                $('.date-range-container .row').removeClass('align-items-center');
+                $('.date-range-container .form-group').addClass('mb-3');
+                $('.date-range-container button').addClass('btn-block');
+            } else {
+                $('.date-range-container .row').addClass('align-items-center');
+                $('.date-range-container .form-group').removeClass('mb-3');
+                $('.date-range-container button').removeClass('btn-block');
+            }
+        }
+        
+        // Run on load and window resize
+        adjustUIForScreenSize();
+        $(window).resize(adjustUIForScreenSize);
+
+        // Add tooltips to action buttons
+        $('[data-toggle="tooltip"]').tooltip();
+
+        // Add date range validation
+        $('#start_date, #end_date').on('change', function() {
+            var startDate = new Date($('#start_date').val());
+            var endDate = new Date($('#end_date').val());
+            
+            if (startDate > endDate && $('#end_date').val() !== '') {
+                alert('End date cannot be before start date');
+                $('#end_date').val('');
+            }
+        });
+
+        // Add currency formatter utility
+        function formatCurrency(amount) {
+            return '{{ config('settings.currency_symbol') }} ' + parseFloat(amount).toFixed(2);
+        }
     });
 </script>
 @endsection

@@ -12,27 +12,37 @@ use Illuminate\Support\Facades\Storage;
 class ProductController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
+     * Display a listing of products.
+     * This method can be accessed by both admin and user roles.
      */
     public function index(Request $request)
     {
         $products = new Product();
+
+        // Apply search filter if search parameter exists
         if ($request->search) {
             $products = $products->where('name', 'LIKE', "%{$request->search}%");
         }
+
+        // Apply category filter if category_id parameter exists
+        if ($request->has('category_id') && $request->category_id) {
+            $products = $products->where('category_id', $request->category_id);
+        }
+
+        // Get products with pagination
         $products = $products->latest()->paginate(10);
-        if (request()->wantsJson()) {
+
+        // Check if request is for API or web view
+        if ($request->wantsJson()) {
             return ProductResource::collection($products);
         }
+
         return view('products.index')->with('products', $products);
     }
 
     /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
+     * Show the form for creating a new product.
+     * Admin only method, already restricted in routes.
      */
     public function create()
     {
@@ -42,7 +52,7 @@ class ProductController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Http\Requests\ProductStoreRequest  $request
      * @return \Illuminate\Http\Response
      */
     public function store(ProductStoreRequest $request)
@@ -70,10 +80,8 @@ class ProductController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Product  $product
-     * @return \Illuminate\Http\Response
+     * Display the specified product.
+     * This method can be accessed by both admin and user roles.
      */
     public function show(Product $product)
     {
@@ -98,7 +106,7 @@ class ProductController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Http\Requests\ProductUpdateRequest  $request
      * @param  \App\Models\Product  $product
      * @return \Illuminate\Http\Response
      */
@@ -145,6 +153,4 @@ class ProductController extends Controller
             'success' => true
         ]);
     }
-
-    
 }

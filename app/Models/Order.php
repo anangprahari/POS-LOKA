@@ -12,7 +12,18 @@ class Order extends Model
         'payment_method',
         'note',
         'discount',
-        'discount_type'
+        'discount_type',
+        'total_amount'
+    ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'total_amount' => 'float',
+        'discount' => 'float',
     ];
 
     public function items()
@@ -38,13 +49,26 @@ class Order extends Model
         return __('customer.working');
     }
 
+    /**
+     * Calculate the subtotal of the order (sum of all items)
+     *
+     * @return float
+     */
     public function subtotal()
     {
-        return $this->items->map(function ($i) {
-            return $i->price;
-        })->sum();
+        // Check if items are already loaded to avoid N+1 query issue
+        if ($this->relationLoaded('items')) {
+            return $this->items->sum('price');
+        }
+
+        return $this->items()->sum('price');
     }
 
+    /**
+     * Calculate the discount amount based on the discount type
+     *
+     * @return float
+     */
     public function discountAmount()
     {
         $subtotal = $this->subtotal();
@@ -56,30 +80,110 @@ class Order extends Model
         return $this->discount ?? 0;
     }
 
+    /**
+     * Calculate the total amount (subtotal - discount)
+     *
+     * @return float
+     */
     public function total()
     {
         return $this->subtotal() - $this->discountAmount();
     }
 
+    /**
+     * Get the formatted total amount
+     *
+     * @return string
+     */
     public function formattedTotal()
     {
         return number_format($this->total(), 2);
     }
 
+    /**
+     * Calculate the total amount received from payments
+     *
+     * @return float
+     */
     public function receivedAmount()
     {
-        return $this->payments->map(function ($i) {
-            return $i->amount;
-        })->sum();
+        // Check if payments are already loaded to avoid N+1 query issue
+        if ($this->relationLoaded('payments')) {
+            return $this->payments->sum('amount');
+        }
+
+        return $this->payments()->sum('amount');
     }
 
+    /**
+     * Get the formatted received amount
+     *
+     * @return string
+     */
     public function formattedReceivedAmount()
     {
         return number_format($this->receivedAmount(), 2);
     }
 
+    /**
+     * Calculate the change amount (received - total)
+     *
+     * @return float
+     */
     public function change()
     {
         return max(0, $this->receivedAmount() - $this->total());
+    }
+
+    /**
+     * Check if this order has any items
+     *
+     * @return bool
+     */
+    public function hasItems()
+    {
+        return $this->items()->count() > 0;
+    }
+
+    /**
+     * Check if the order is fully paid
+     *
+     * @return bool
+     */
+    public function isPaid()
+    {
+        return $this->receivedAmount() >= $this->total();
+    }
+
+    /**
+     * Get remaining amount to be paid
+     * 
+     * @return float
+     */
+    public function remainingAmount()
+    {
+        return max(0, $this->total() - $this->receivedAmount());
+    }
+
+    /**
+     * Update total_amount before saving the order
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($order) {
+            // Only calculate if total_amount is not already set
+            if (empty($order->total_amount)) {
+                $order->total_amount = $order->total();
+            }
+        });
+
+        static::updating(function ($order) {
+            // Re-calculate total_amount when order items or discount changes
+            if ($order->isDirty(['discount', 'discount_type']) || $order->items()->count() > 0) {
+                $order->total_amount = $order->total();
+            }
+        });
     }
 }
