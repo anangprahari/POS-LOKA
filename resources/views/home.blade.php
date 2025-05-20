@@ -394,11 +394,8 @@
                 <div class="card-header">
                     <h3>{{ __('low stock products') }}</h3>
                     <div class="card-tools">
-                        <button class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-file-export"></i> {{ __('export') }}
-                        </button>
-                        <button class="btn btn-sm btn-primary">
-                            <i class="fas fa-plus"></i> {{ __('restock') }}
+                        <button class="btn btn-success">
+                            <i class="fas fa-file-excel"></i> {{ __('Export to Excel') }}
                         </button>
                     </div>
                 </div>
@@ -414,7 +411,7 @@
                                     <th>{{ __('price') }}</th>
                                     <th>{{ __('quantity') }}</th>
                                     <th>{{ __('status') }}</th>
-                                    <th>{{ __('updated_at') }}</th>
+                                    <th>{{ __('updated at') }}</th>
                                     <th>{{ __('actions') }}</th>
                                 </tr>
                             </thead>
@@ -461,8 +458,8 @@
                 <div class="card-header">
                     <h3>{{ __('hot products') }}</h3>
                     <div class="card-tools">
-                        <button class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-file-export"></i> {{ __('export') }}
+                        <button class="btn btn-success">
+                            <i class="fas fa-file-excel"></i> {{ __('Export to Excel') }}
                         </button>
                     </div>
                 </div>
@@ -478,7 +475,7 @@
                                     <th>{{ __('price') }}</th>
                                     <th>{{ __('quantity') }}</th>
                                     <th>{{ __('status') }}</th>
-                                    <th>{{ __('updated_at') }}</th>
+                                    <th>{{ __('updated at') }}</th>
                                     <th>{{ __('actions') }}</th>
                                 </tr>
                             </thead>
@@ -521,8 +518,8 @@
                 <div class="card-header">
                     <h3>{{ __('hot products year') }}</h3>
                     <div class="card-tools">
-                        <button class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-file-export"></i> {{ __('export') }}
+                        <button class="btn btn-success">
+                            <i class="fas fa-file-excel"></i> {{ __('Export to Excel') }}
                         </button>
                     </div>
                 </div>
@@ -538,7 +535,7 @@
                                     <th>{{ __('price') }}</th>
                                     <th>{{ __('quantity') }}</th>
                                     <th>{{ __('status') }}</th>
-                                    <th>{{ __('updated_at') }}</th>
+                                    <th>{{ __('updated at') }}</th>
                                     <th>{{ __('actions') }}</th>
                                 </tr>
                             </thead>
@@ -581,8 +578,8 @@
                 <div class="card-header">
                     <h3>{{ __('best selling products') }}</h3>
                     <div class="card-tools">
-                        <button class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-file-export"></i> {{ __('export') }}
+                        <button class="btn btn-success">
+                            <i class="fas fa-file-excel"></i> {{ __('Export to Excel') }}
                         </button>
                     </div>
                 </div>
@@ -597,9 +594,9 @@
                                     <th>{{ __('barcode') }}</th>
                                     <th>{{ __('price') }}</th>
                                     <th>{{ __('quantity') }}</th>
-                                    <th>{{ __('total_sold') }}</th>
+                                    <th>{{ __('total sold') }}</th>
                                     <th>{{ __('status') }}</th>
-                                    <th>{{ __('updated_at') }}</th>
+                                    <th>{{ __('updated at') }}</th>
                                     <th>{{ __('actions') }}</th>
                                 </tr>
                             </thead>
@@ -649,7 +646,7 @@
             lengthMenu: [5, 10, 25, 50],
             language: {
                 search: "<i class='fas fa-search'></i>",
-                searchPlaceholder: "{{ __('dashboard.search') }}..."
+                searchPlaceholder: "{{ __('dashboard search') }}..."
             }
         });
         

@@ -15,10 +15,10 @@ class UserMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (auth()->check() && auth()->user()->role === 'user') {
-            return $next($request);
+        if (auth()->user()->role !== 'user') {
+            return redirect()->route('dashboard');
         }
 
-        abort(403, 'Unauthorized');
+        return $next($request);
     }
 }

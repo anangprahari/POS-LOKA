@@ -6,6 +6,9 @@ use App\Http\Requests\OrderStoreRequest;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Rap2hpoutre\FastExcel\FastExcel;
+use OpenSpout\Common\Entity\Style\Style;
+use OpenSpout\Common\Entity\Style\Color;
 
 class OrderController extends Controller
 {
@@ -68,6 +71,83 @@ class OrderController extends Controller
         ));
     }
 
+    /**
+     * Export orders to Excel file with elegant modern styling
+     * 
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     */
+    public function export(Request $request)
+    {
+        // Build the query with the same filters as the index method
+        $ordersQuery = new Order();
+
+        // Apply date filters if provided
+        if ($request->start_date) {
+            $ordersQuery = $ordersQuery->where('created_at', '>=', $request->start_date);
+        }
+        if ($request->end_date) {
+            $ordersQuery = $ordersQuery->where('created_at', '<=', $request->end_date . ' 23:59:59');
+        }
+
+        // Get all orders with their relationships
+        $orders = $ordersQuery->with(['items.product', 'payments', 'customer'])->latest()->get();
+
+        // Define the column headers
+        $headers = [
+            'invoice' => 'Invoice #',
+            'date' => 'Date',
+            'customer' => 'Customer',
+            'payment_method' => 'Payment Method',
+            'subtotal' => 'Subtotal',
+            'discount' => 'Discount',
+            'total' => 'Total',
+            'paid' => 'Paid Amount',
+            'status' => 'Payment Status',
+            'items_count' => 'Items Count',
+            'note' => 'Note'
+        ];
+
+        // Format the data
+        $formattedOrders = $orders->map(function ($order) use ($headers) {
+            $subtotal = $order->subtotal();
+            $discountAmount = $order->discountAmount();
+            $total = $order->total();
+            $paid = $order->receivedAmount();
+            $itemsCount = $order->items->sum('quantity');
+
+            // Get customer name, handling null case
+            $customerName = $order->customer ?
+                ($order->customer->first_name . ' ' . $order->customer->last_name) :
+                'Walk-in Customer';
+
+            return [
+                $headers['invoice'] => 'INV-' . str_pad($order->id, 5, '0', STR_PAD_LEFT),
+                $headers['date'] => $order->created_at->format('d M Y H:i'),
+                $headers['customer'] => $customerName,
+                $headers['payment_method'] => ucfirst($order->payment_method ?? $order->payments->last()?->payment_method ?? 'cash'),
+                $headers['subtotal'] => 'Rp. ' . number_format($subtotal, 0, ',', '.'),
+                $headers['discount'] => 'Rp. ' . number_format($discountAmount, 0, ',', '.'),
+                $headers['total'] => 'Rp. ' . number_format($total, 0, ',', '.'),
+                $headers['paid'] => 'Rp. ' . number_format($paid, 0, ',', '.'),
+                $headers['items_count'] => $itemsCount,
+                $headers['note'] => $order->note ?? '-'
+            ];
+        });
+
+        // Create header style with modern look
+        $headerStyle = (new Style())
+            ->setFontBold()
+            ->setFontSize(13)
+            ->setFontColor(Color::WHITE)
+            ->setBackgroundColor('728FCE'); // Dark blue-gray color
+
+        // Generate and download the Excel file
+        return (new FastExcel($formattedOrders))
+            ->headerStyle($headerStyle)
+            ->download('orders_report.xlsx');
+    }
+
     public function store(OrderStoreRequest $request)
     {
         // Mulai transaksi database untuk memastikan konsistensi data
@@ -119,6 +199,62 @@ class OrderController extends Controller
         });
     }
 
+    /**
+     * Export detailed order items report
+     * 
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     */
+    public function exportDetails(Request $request)
+    {
+        // Build the query with the same filters as the index method
+        $ordersQuery = new Order();
+
+        // Apply date filters if provided
+        if ($request->start_date) {
+            $ordersQuery = $ordersQuery->where('created_at', '>=', $request->start_date);
+        }
+        if ($request->end_date) {
+            $ordersQuery = $ordersQuery->where('created_at', '<=', $request->end_date . ' 23:59:59');
+        }
+
+        // Get all orders with their relationships
+        $orders = $ordersQuery->with(['items.product', 'customer'])->latest()->get();
+
+        // Prepare data for export - one row per order item
+        $orderItems = collect();
+
+        foreach ($orders as $order) {
+            foreach ($order->items as $item) {
+                $orderItems->push([
+                    'Invoice #' => 'INV-' . str_pad($order->id, 5, '0', STR_PAD_LEFT),
+                    'Date' => $order->created_at->format('d M Y H:i'),
+                    'Customer' => $order->customer ?
+                        ($order->customer->first_name . ' ' . $order->customer->last_name) :
+                        'Walk-in Customer',
+                    'Product ID' => $item->product->id,
+                    'Product Name' => $item->product->name,
+                    'Barcode' => $item->product->barcode ?? '-',
+                    'Quantity' => $item->quantity,
+                    'Unit Price' => 'Rp. ' . number_format($item->price / $item->quantity, 0, ',', '.'),
+                    'Total Price' => 'Rp. ' . number_format($item->price, 0, ',', '.')
+                ]);
+            }
+        }
+
+        // Create header style with modern look
+        $headerStyle = (new Style())
+            ->setFontBold()
+            ->setFontSize(13)
+            ->setFontColor(Color::WHITE)
+            ->setBackgroundColor('728FCE'); // Dark blue-gray color
+
+        // Generate and download the Excel file
+        return (new FastExcel($orderItems))
+            ->headerStyle($headerStyle)
+            ->download('order_items_details.xlsx');
+    }
+
     // Helper function untuk mendapatkan data order untuk struk
     private function getOrderDataForReceipt($orderId)
     {
@@ -160,7 +296,7 @@ class OrderController extends Controller
     {
         $orders = Order::with(['customer', 'payments', 'items.product'])
             ->latest()
-            ->take(10) // Ambil 10 transaksi terbaru
+            ->take(10) // Get 10 most recent transactions
             ->get()
             ->map(function ($order) {
                 $subtotal = $order->subtotal();
@@ -183,12 +319,14 @@ class OrderController extends Controller
                     'total' => $total,
                     'paid' => $paid,
                     'change' => $change,
+                    'is_paid' => $order->isPaid(), // Make sure this method exists in your Order model
+                    'remaining' => $order->remainingAmount(), // Make sure this method exists in your Order model
                     'order_items' => $order->items->map(function ($item) {
                         return [
                             'product' => $item->product,
                             'quantity' => $item->quantity,
-                            'price' => $item->price / $item->quantity, // Harga per item
-                            'total' => $item->price,
+                            'price' => $item->price / $item->quantity, // Price per item
+                            'total' => $item->price, // Total price (item × quantity)
                         ];
                     }),
                 ];

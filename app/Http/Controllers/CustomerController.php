@@ -8,6 +8,9 @@ use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Rap2hpoutre\FastExcel\FastExcel; // Added for export functionality
+use OpenSpout\Common\Entity\Style\Style;
+use OpenSpout\Common\Entity\Style\Color;
 
 class CustomerController extends Controller
 {
@@ -35,6 +38,65 @@ class CustomerController extends Controller
         ];
 
         return view('customers.index', compact('customers', 'stats'));
+    }
+
+    /**
+     * Export customers to Excel file with elegant modern styling
+     * 
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     */
+    public function export()
+    {
+        $customers = Customer::with('orders')->get();
+
+        // Define the column headers as key => value pairs
+        $headers = [
+            'id' => 'ID',
+            'first_name' => 'First Name',
+            'last_name' => 'Last Name',
+            'full_name' => 'Full Name',
+            'email' => 'Email',
+            'phone' => 'Phone',
+            'address' => 'Address',
+            'status' => 'Status',
+            'total_spent' => 'Total Spent',
+            'orders' => 'Orders',
+            'last_order' => 'Last Order',
+            'joined_date' => 'Joined Date'
+        ];
+
+        // Format the data
+        $formattedCustomers = $customers->map(function ($customer) use ($headers) {
+            $totalSpent = $customer->orders->sum('total_amount');
+            $orderCount = $customer->orders->count();
+            $lastOrder = $customer->orders->sortByDesc('created_at')->first();
+
+            return [
+                $headers['id'] => $customer->id,
+                $headers['first_name'] => $customer->first_name,
+                $headers['last_name'] => $customer->last_name,
+                $headers['full_name'] => $customer->first_name . ' ' . $customer->last_name,
+                $headers['email'] => $customer->email,
+                $headers['phone'] => $customer->phone,
+                $headers['address'] => $customer->address,
+                $headers['status'] => $customer->isVipCustomer() ? 'VIP' : ($customer->isReturningCustomer() ? 'Returning' : 'Regular'),
+                $headers['total_spent'] => $totalSpent ? 'Rp. ' . number_format($totalSpent, 0, ',', '.') : 'Rp. 0',
+                $headers['orders'] => $orderCount,
+                $headers['last_order'] => $lastOrder ? $lastOrder->created_at->format('d M Y') : '-',
+                $headers['joined_date'] => $customer->created_at->format('d M Y'),
+            ];
+        });
+
+        // Modern header style
+        $headerStyle = (new Style())
+            ->setFontBold()
+            ->setFontSize(13)
+            ->setFontColor(Color::WHITE)
+            ->setBackgroundColor('728FCE'); // Dark blue-gray color
+
+        return (new FastExcel($formattedCustomers))
+            ->headerStyle($headerStyle)
+            ->download('customers_report.xlsx');
     }
 
     /**

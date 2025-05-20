@@ -8,6 +8,10 @@ use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Rap2hpoutre\FastExcel\FastExcel;
+use OpenSpout\Common\Entity\Style\Style;
+use OpenSpout\Common\Entity\Style\Color;
+
 
 class ProductController extends Controller
 {
@@ -39,6 +43,42 @@ class ProductController extends Controller
 
         return view('products.index')->with('products', $products);
     }
+
+    /**
+     * Export products to Excel file
+     * 
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     */
+    public function export()
+    {
+        $products = Product::all();
+
+        $formattedProducts = $products->map(function ($product) {
+            return [
+                'ID' => $product->id,
+                'Name' => $product->name,
+                'Barcode' => $product->barcode,
+                'Price' => 'Rp. ' . number_format($product->price, 0, ',', '.'),
+                'Quantity' => $product->quantity . ' cup',
+                'Status' => $product->status ? 'Active' : 'Inactive',
+                'Created At' => $product->created_at->format('Y-m-d H:i:s'),
+                'Updated At' => $product->updated_at->format('Y-m-d H:i:s'),
+            ];
+        });
+
+        // Create style for header
+        $headerStyle = (new Style())
+            ->setFontBold()
+            ->setFontSize(13)
+            ->setFontColor(Color::WHITE)
+            ->setBackgroundColor('728FCE'); // Warna biru
+
+        return (new FastExcel($formattedProducts))
+            ->headerStyle($headerStyle)
+            ->download('products.xlsx');
+    
+    }
+
 
     /**
      * Show the form for creating a new product.

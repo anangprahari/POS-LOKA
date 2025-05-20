@@ -3,7 +3,6 @@
 @section('title', __('product.Product_List'))
 @section('content-header', __('product.Product_List'))
 @section('content-actions')
-<a href="{{route('products.create')}}" class="btn btn-orange">{{ __('product.Create_Product') }}</a>
 @endsection
 @section('css')
 <link rel="stylesheet" href="{{ asset('plugins/sweetalert2/sweetalert2.min.css') }}">
@@ -152,7 +151,6 @@
     background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
     box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
 }
-
 /* Pagination */
 .pagination {
     margin-top: 20px;
@@ -326,14 +324,24 @@
 
 <!-- Product List Table -->
 <div class="card product-list shadow-sm border-0">
-    <div class="card-header">
-        <h3>{{ __('product.Product_List') }}</h3>
-        <div class="card-tools">
-            <button class="btn btn-sm btn-outline-primary">
-                <i class="fas fa-file-export"></i> {{ __('export') }}
-            </button>
+    <div class="card-header d-flex align-items-center justify-content-between">
+        <h3 class="m-0">{{ __('product.Product_List') }}</h3>
+        
+        <div class="d-flex flex-grow-1 justify-content-between align-items-center ml-3">
+            <div class="flex-grow-1 text-center">
+                <a href="{{ route('products.create') }}" class="btn btn-orange">
+                    <i class="fas fa-plus-circle mr-1"></i>
+                    {{ __('Add New Product') }}
+                </a>
+            </div>
+            <div class="text-right">
+                <a href="{{ route('products.export') }}" class="btn btn-success">
+                    <i class="fas fa-file-excel"></i> {{ __('Export to Excel') }}
+                </a>
+            </div>
         </div>
     </div>
+    
     <div class="card-body table-responsive p-0">
         <table class="table table-hover text-nowrap align-middle">
             <thead>
@@ -598,22 +606,36 @@
             });
         });
         
-        // Filter buttons functionality
-        $(".filter-button").click(function() {
-            $(".filter-button").removeClass("active");
-            $(this).addClass("active");
-            
-            var filter = $(this).text().trim().toLowerCase();
-            if(filter === '{{ strtolower(__("product.All")) }}') {
-                $("table tbody tr").show();
-            } else if(filter === '{{ strtolower(__("product.Active")) }}') {
-                $("table tbody tr").hide();
-                $("table tbody tr:contains('{{ __("common.Active") }}')").show();
-            } else if(filter === '{{ strtolower(__("product.Inactive")) }}') {
-                $("table tbody tr").hide();
-                $("table tbody tr:contains('{{ __("common.Inactive") }}')").show();
+       // Filter buttons functionality - Fixed properly
+$(".filter-button").click(function() {
+    $(".filter-button").removeClass("active");
+    $(this).addClass("active");
+    
+    var filter = $(this).text().trim().toLowerCase();
+    
+    $("table tbody tr").each(function() {
+        // Mencari elemen span dengan class badge-custom di dalam baris
+        var statusBadge = $(this).find("td .badge-custom");
+        
+        if (filter === '{{ strtolower(__("all")) }}') {
+            $(this).show();
+        } else if (filter === '{{ strtolower(__("active")) }}') {
+            // Cek apakah badge memiliki class 'active'
+            if (statusBadge.hasClass('active')) {
+                $(this).show();
+            } else {
+                $(this).hide();
             }
-        });
+        } else if (filter === '{{ strtolower(__("inactive")) }}') {
+            // Cek apakah badge memiliki class 'inactive'
+            if (statusBadge.hasClass('inactive')) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        }
+    });
+});
         
         // Delete product functionality (from original code)
         $(document).on('click', '.btn-delete', function() {

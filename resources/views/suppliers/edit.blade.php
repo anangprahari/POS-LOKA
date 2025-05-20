@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', __('supplier.Create_supplier'))
-@section('content-header', __('supplier.Create_supplier'))
+@section('title', __('supplier.Edit_supplier'))
+@section('content-header', __('Edit Supplier'))
 @section('content-actions')
 <a href="{{ route('suppliers.index') }}" class="btn btn-sm btn-secondary">
     <i class="fas fa-arrow-left mr-1"></i>
@@ -171,6 +171,16 @@
     background: linear-gradient(135deg, #7f8c8d 0%, #6b7b7c 100%);
 }
 
+.btn-danger {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    border: none;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #c0392b 0%, #a33225 100%);
+}
+
 .btn i {
     margin-right: 5px;
 }
@@ -283,17 +293,65 @@
 .input-group .form-control {
     border-radius: 0 8px 8px 0;
 }
+
+/* Actions area styling */
+.supplier-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+/* Badge styling */
+.badge-status {
+    font-size: 0.8rem;
+    padding: 0.5rem 0.8rem;
+    border-radius: 50px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.badge-active {
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+    color: white;
+}
+
+.badge-inactive {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: white;
+}
+
+/* Info box styling */
+.info-box {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-left: 4px solid #3498db;
+}
+
+.info-box-title {
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #2c3e50;
+}
+
+.info-box-content {
+    color: #7f8c8d;
+    font-size: 0.9rem;
+}
 </style>
 @endsection
 
 @section('content')
 <div class="card">
     <div class="card-header">
-        <h3><i class="fas fa-user-tie mr-2"></i>{{ __('supplier.Create_supplier') }}</h3>
+        <h3><i class="fas fa-user-tie mr-2"></i>{{ __('Edit Supplier') }}</h3>
     </div>
     <div class="card-body">
-        <form action="{{ route('suppliers.store') }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('suppliers.update', $supplier) }}" method="POST" enctype="multipart/form-data">
             @csrf
+            @method('PUT')
 
             <div class="form-section">
                 <div class="form-section-title">{{ __('Personal Information') }}</div>
@@ -301,13 +359,13 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label for="first_name">{{ __('supplier.First_Name') }}</label>
+                            <label for="first_name">{{ __('First Name') }}</label>
                             <div class="input-group">
                                 <div class="input-group-prepend">
                                     <span class="input-group-text"><i class="fas fa-user"></i></span>
                                 </div>
                                 <input type="text" name="first_name" class="form-control @error('first_name') is-invalid @enderror"
-                                    id="first_name" placeholder="{{ __('supplier.First_Name') }}" value="{{ old('first_name') }}">
+                                    id="first_name" placeholder="{{ __('First Name') }}" value="{{ old('first_name', $supplier->first_name) }}">
                             </div>
                             @error('first_name')
                             <span class="invalid-feedback d-block" role="alert">
@@ -319,13 +377,13 @@
                     
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label for="last_name">{{ __('supplier.Last_Name') }}</label>
+                            <label for="last_name">{{ __('Last Name') }}</label>
                             <div class="input-group">
                                 <div class="input-group-prepend">
                                     <span class="input-group-text"><i class="fas fa-user"></i></span>
                                 </div>
                                 <input type="text" name="last_name" class="form-control @error('last_name') is-invalid @enderror"
-                                    id="last_name" placeholder="{{ __('supplier.Last_Name') }}" value="{{ old('last_name') }}">
+                                    id="last_name" placeholder="{{ __('Last Name') }}" value="{{ old('last_name', $supplier->last_name) }}">
                             </div>
                             @error('last_name')
                             <span class="invalid-feedback d-block" role="alert">
@@ -343,13 +401,13 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label for="email">{{ __('supplier.Email') }}</label>
+                            <label for="email">{{ __('Email') }}</label>
                             <div class="input-group">
                                 <div class="input-group-prepend">
                                     <span class="input-group-text"><i class="fas fa-envelope"></i></span>
                                 </div>
                                 <input type="email" name="email" class="form-control @error('email') is-invalid @enderror"
-                                    id="email" placeholder="{{ __('supplier.Email') }}" value="{{ old('email') }}">
+                                    id="email" placeholder="{{ __('Email') }}" value="{{ old('email', $supplier->email) }}">
                             </div>
                             @error('email')
                             <span class="invalid-feedback d-block" role="alert">
@@ -361,13 +419,13 @@
                     
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label for="phone">{{ __('supplier.Phone') }}</label>
+                            <label for="phone">{{ __('Phone') }}</label>
                             <div class="input-group">
                                 <div class="input-group-prepend">
                                     <span class="input-group-text"><i class="fas fa-phone"></i></span>
                                 </div>
                                 <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror"
-                                    id="phone" placeholder="{{ __('supplier.Phone') }}" value="{{ old('phone') }}">
+                                    id="phone" placeholder="{{ __('Phone') }}" value="{{ old('phone', $supplier->phone) }}">
                             </div>
                             @error('phone')
                             <span class="invalid-feedback d-block" role="alert">
@@ -379,13 +437,13 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="address">{{ __('supplier.Address') }}</label>
+                    <label for="address">{{ __('Address') }}</label>
                     <div class="input-group">
                         <div class="input-group-prepend">
                             <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
                         </div>
                         <input type="text" name="address" class="form-control @error('address') is-invalid @enderror"
-                            id="address" placeholder="{{ __('supplier.Address') }}" value="{{ old('address') }}">
+                            id="address" placeholder="{{ __('Address') }}" value="{{ old('address', $supplier->address) }}">
                     </div>
                     @error('address')
                     <span class="invalid-feedback d-block" role="alert">
@@ -398,33 +456,46 @@
             <div class="form-section">
                 <div class="form-section-title">{{ __('Profile Image') }}</div>
                 
+                @if($supplier->avatar)
+                <div class="current-image-container mb-3">
+                    <img src="{{ asset('storage/' . $supplier->avatar) }}" alt="{{ $supplier->first_name }}'s avatar" class="current-image">
+                    <span class="current-image-label">{{ __('Current Avatar') }}</span>
+                </div>
+                @endif
+                
                 <div class="form-group">
-                    <label for="avatar">{{ __('supplier.Avatar') }}</label>
+                    <label for="avatar">{{ __('Update Avatar') }}</label>
                     <div class="custom-file">
                         <input type="file" class="custom-file-input" name="avatar" id="avatar">
-                        <label class="custom-file-label" for="avatar">{{ __('supplier.Choose_file') }}</label>
+                        <label class="custom-file-label" for="avatar">{{ __('Choose file') }}</label>
                     </div>
+                    <small class="form-text text-muted">{{ __('Leave empty to keep current image') }}</small>
                     @error('avatar')
                     <span class="invalid-feedback d-block" role="alert">
                         <strong>{{ $message }}</strong>
                     </span>
                     @enderror
                     
-                    <!-- Image preview will be inserted here when a file is selected -->
+                    <!-- New image preview will be inserted here when a file is selected -->
                 </div>
             </div>
 
             <div class="form-footer">
-                <a href="{{ route('suppliers.index') }}" class="btn btn-secondary">
-                    <i class="fas fa-times mr-1"></i> {{ __('Cancel') }}
-                </a>
-                <button class="btn btn-primary" type="submit">
-                    <i class="fas fa-save mr-1"></i> {{ __('common.Create') }}
-                </button>
+                <div>
+                    <a href="{{ route('suppliers.index') }}" class="btn btn-secondary">
+                        <i class="fas fa-times mr-1"></i> {{ __('Cancel') }}
+                    </a>
+                </div>
+                <div>
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fas fa-save mr-1"></i> {{ __('common.Update') }}
+                    </button>
+                </div>
             </div>
         </form>
     </div>
 </div>
+
 @endsection
 
 @section('js')
@@ -454,14 +525,14 @@
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    // Remove any existing preview
-                    $('.current-image-container').remove();
+                    // Remove any existing new preview
+                    $('.new-image-container').remove();
                     
                     // Create new preview container
                     const imagePreview = `
-                        <div class="current-image-container">
-                            <img src="${e.target.result}" alt="Avatar preview" class="current-image">
-                            <span class="current-image-label">{{ __("Avatar Preview") }}</span>
+                        <div class="new-image-container mt-3">
+                            <img src="${e.target.result}" alt="New avatar preview" class="current-image">
+                            <span class="current-image-label">{{ __("New Avatar Preview") }}</span>
                         </div>
                     `;
                     

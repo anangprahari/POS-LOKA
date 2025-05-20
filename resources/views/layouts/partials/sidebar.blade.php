@@ -90,6 +90,13 @@
                         'segment' => 'suppliers', 
                         'visible' => $isAdmin
                     ],
+                    [   
+                        'route' => 'users.index', 
+                        'icon' => 'fas fa-user-cog', 
+                        'label' => __('User'), 
+                        'segment' => 'users', 
+                        'visible' => $isAdmin
+                    ],
                     [
                         'route' => 'settings.index', 
                         'icon' => 'fas fa-cogs', 
@@ -97,7 +104,7 @@
                         'segment' => 'settings', 
                         'visible' => $isAdmin
                     ],
-                ];
+                         ];
             @endphp
             
             @foreach ($menus as $menu)

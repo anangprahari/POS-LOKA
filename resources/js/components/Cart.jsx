@@ -21,7 +21,7 @@ class Cart extends Component {
             note: "",
             showTransactionHistory: false,
             recentTransactions: [],
-            cashAmount: 0, //
+            cashAmount: 0,
             showProductDetails: false,
             selectedProduct: null,
             holdOrders: [],
@@ -69,7 +69,7 @@ class Cart extends Component {
 
     loadTranslations() {
         axios
-            .get("/admin/locale/cart")
+            .get("/locale/cart")
             .then((res) => this.setState({ translations: res.data }))
             .catch((error) =>
                 console.error("Error loading translations:", error)
@@ -78,21 +78,19 @@ class Cart extends Component {
 
     loadCustomers() {
         axios
-            .get(`/admin/customers`)
+            .get(`/customers`)
             .then((res) => this.setState({ customers: res.data }));
     }
 
     loadProducts(search = "") {
         const query = search ? `?search=${search}` : "";
         axios
-            .get(`/admin/products${query}`)
+            .get(`/products${query}`)
             .then((res) => this.setState({ products: res.data.data }));
     }
 
     loadCart() {
-        axios
-            .get("/admin/cart")
-            .then((res) => this.setState({ cart: res.data }));
+        axios.get("/cart").then((res) => this.setState({ cart: res.data }));
     }
 
     handleOnChangeBarcode(e) {
@@ -104,7 +102,7 @@ class Cart extends Component {
         const { barcode } = this.state;
         if (!barcode) return;
         axios
-            .post("/admin/cart", { barcode })
+            .post("/cart", { barcode })
             .then(() => {
                 this.loadCart();
                 this.setState({ barcode: "" });
@@ -123,7 +121,7 @@ class Cart extends Component {
         this.setState({ cart });
         if (!qty) return;
         axios
-            .post("/admin/cart/change-qty", { product_id, quantity: qty })
+            .post("/cart/change-qty", { product_id, quantity: qty })
             .catch((err) =>
                 Swal.fire("Error!", err.response.data.message, "error")
             );
@@ -150,18 +148,16 @@ class Cart extends Component {
     }
 
     handleClickDelete(product_id) {
-        axios
-            .post("/admin/cart/delete", { product_id, _method: "DELETE" })
-            .then(() =>
-                this.setState((state) => ({
-                    cart: state.cart.filter((c) => c.id !== product_id),
-                }))
-            );
+        axios.delete("/cart/delete", { data: { product_id } }).then(() =>
+            this.setState((state) => ({
+                cart: state.cart.filter((c) => c.id !== product_id),
+            }))
+        );
     }
 
     handleEmptyCart() {
         axios
-            .post("/admin/cart/empty", { _method: "DELETE" })
+            .post("/cart/empty", { _method: "DELETE" })
             .then(() => this.setState({ cart: [] }));
     }
 
@@ -188,7 +184,7 @@ class Cart extends Component {
         }
 
         axios
-            .post("/admin/cart", { barcode })
+            .post("/cart", { barcode })
             .then(() => {
                 this.loadCart();
             })
@@ -261,7 +257,7 @@ class Cart extends Component {
 
         // Kirim data ke server
         axios
-            .post("/admin/orders", orderData)
+            .post("/orders", orderData)
             .then((response) => {
                 Swal.close();
 
@@ -374,7 +370,7 @@ class Cart extends Component {
 
     loadRecentTransactions() {
         axios
-            .get("/admin/orders/recent")
+            .get("/orders/recent")
             .then((res) => {
                 this.setState({ recentTransactions: res.data });
             })
@@ -2047,7 +2043,7 @@ class Cart extends Component {
 
     viewTransactionDetails(transactionId) {
         axios
-            .get(`/admin/orders/${transactionId}`)
+            .get(`/orders/${transactionId}`)
             .then((res) => {
                 const transaction = res.data;
 

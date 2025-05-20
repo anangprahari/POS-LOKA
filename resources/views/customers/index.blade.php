@@ -3,7 +3,6 @@
 @section('title', __('customer.Customer_List'))
 @section('content-header', __('customer.Customer_List'))
 @section('content-actions')
-<a href="{{route('customers.create')}}" class="btn btn-orange">{{ __('customer.Add_Customer') }}</a>
 @endsection
 @section('css')
 <link rel="stylesheet" href="{{ asset('plugins/sweetalert2/sweetalert2.min.css') }}">
@@ -36,6 +35,10 @@
     margin: 0;
     font-size: 18px;
     font-weight: 600;
+}
+.card-text {
+    margin-top: 5px;
+    text-align: center;
 }
 
 /* Table Styling */
@@ -454,10 +457,14 @@
                 <i class="fas fa-redo"></i>
             </div>
             <div class="card-value">{{ $stats['returning'] ?? 0 }}</div>
-            <div class="card-title">{{ __('Returning Customers') }}</div>
-            <div class="card-description small text-white-50">{{ __('More than 1 purchase') }}</div>
+            <!-- Kelompokkan title dan description -->
+            <div class="card-text">
+                <div class="card-title">{{ __('Returning Customers') }}</div>
+                <div class="card-description small text-white-50">{{ __('More than 1 purchase') }}</div>
+            </div>
         </div>
     </div>
+    
     
     <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
         <div class="dashboard-card card-vip">
@@ -466,21 +473,33 @@
                 <i class="fas fa-crown"></i>
             </div>
             <div class="card-value">{{ $stats['vip'] ?? 0 }}</div>
+            <div class="card-text">
             <div class="card-title">{{ __('VIP Customers') }}</div>
             <div class="card-description small text-white-50">{{ __('Rp. 100.000+ spent or 5+ orders') }}</div>
+        </div>
         </div>
     </div>
 </div>
 <!-- Customer List Table -->
 <div class="card customer-list shadow-sm border-0">
-    <div class="card-header">
-        <h3>{{ __('customer.Customer_List') }}</h3>
-        <div class="card-tools">
-            <button class="btn btn-sm btn-outline-primary">
-                <i class="fas fa-file-export"></i> {{ __('Export') }}
-            </button>
+    <div class="card-header d-flex align-items-center justify-content-between">
+        <h3 class="m-0">{{ __('customer.Customer_List') }}</h3>
+        
+        <div class="d-flex flex-grow-1 justify-content-between align-items-center ml-3">
+            <div class="flex-grow-1 text-center">
+                <a href="{{ route('customers.create') }}" class="btn btn-orange">
+                    <i class="fas fa-plus-circle mr-1"></i>
+                    {{ __('Add New Customers') }}
+                </a>
+            </div>
+            <div class="text-right">
+                <a href="{{ route('customers.export') }}" class="btn btn-success">
+                    <i class="fas fa-file-excel"></i> {{ __('Export to Excel') }}
+                </a>
+            </div>
         </div>
     </div>
+    
     <div class="card-body table-responsive p-0">
         <table class="table table-hover text-nowrap align-middle">
             <thead>

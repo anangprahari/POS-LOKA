@@ -20,4 +20,14 @@ class Supplier extends Model
     ];
 
     // Define relationships here (e.g., with the Product model)
+    /**
+     * Get the supplier's full name.
+     *
+     * @return string
+     */
+    public function getFullNameAttribute()
+    {
+        return "{$this->first_name} {$this->last_name}";
+    }
+    
 }

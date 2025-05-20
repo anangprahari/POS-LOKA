@@ -369,6 +369,7 @@
     color: #999;
 }
 
+
 /* Alert styling */
 .alert {
     border-radius: 12px;
@@ -422,7 +423,7 @@
             </div>
         @endif
     </div>
-    <div class="col-md-5">
+    <div class="col-md-6">
         <div class="search-box">
             <i class="fas fa-search"></i>
             <input type="text" id="orderSearch" class="form-control" placeholder="{{ __('Search Orders...') }}">
@@ -493,8 +494,20 @@
 </div>
 
 <div class="card shadow-sm border-0">
-    <div class="card-header">
-        <h3>{{ __('order.Orders_List') }}</h3>
+    <div class="card-header d-flex align-items-center justify-content-between">
+        <h3 class="m-0">{{ __('Orders List') }}</h3>
+        <div class="d-flex flex-grow-1 justify-content-between align-items-center ml-3">
+            <div class="flex-grow-1 text-center">
+            </div>
+            <div class="text-right">
+                <a href="{{ route('orders.export') }}"  class="btn btn-success">
+                    <i class="fas fa-file-excel"></i> {{ __('Export Orders to Excel') }}
+                </a>
+                <a href="{{ route('orders.export-details') }}"  class="btn btn-success">
+                    <i class="fas fa-file-excel"></i> {{ __('Export Orders Items to Excel') }}
+                </a>
+            </div>
+        </div>
     </div>
     <div class="card-body table-responsive">
         <table class="table table-hover align-middle">

@@ -152,7 +152,7 @@ class Order extends Model
      */
     public function isPaid()
     {
-        return $this->receivedAmount() >= $this->total();
+        return $this->total() <= $this->receivedAmount();
     }
 
     /**
@@ -162,7 +162,9 @@ class Order extends Model
      */
     public function remainingAmount()
     {
-        return max(0, $this->total() - $this->receivedAmount());
+        $total = $this->total();
+        $paid = $this->receivedAmount();
+        return max(0, $total - $paid);
     }
 
     /**
