@@ -119,12 +119,13 @@ class SupplierController extends Controller
      */
     public function show(Supplier $supplier)
     {
-        // Jika request adalah AJAX, kembalikan data JSON
+        // Menggunakan method getAvatarUrl() dari model
+        $supplier->avatar_url = $supplier->getAvatarUrl();
+
         if (request()->ajax() || request()->wantsJson()) {
             return response()->json($supplier);
         }
 
-        // Jika bukan AJAX, tampilkan view
         return view('suppliers.show', compact('supplier'));
     }
 

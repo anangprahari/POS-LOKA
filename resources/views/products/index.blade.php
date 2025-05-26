@@ -362,29 +362,51 @@
                 @foreach ($products as $product)
                 <tr>
                     <td>{{$product->id}}</td>
-                    <td>{{$product->name}}</td>
+                    <td>
+                        <div class="product-name-badge">{{$product->name}}</div>
+                    </td>
                     <td><img class="product-img" src="{{ Storage::url($product->image) }}" alt=""></td>
-                    <td>{{$product->barcode}}</td>
-                    <td>Rp. {{ number_format($product->price, 0, ',', '.') }}</td>
-                    <td>{{ $product->quantity }} cup</td>
+                    <td>
+                        <div class="barcode-badge">
+                            <i class="fas fa-barcode"></i> {{$product->barcode}}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="price-badge">
+                            <i class="fas fa-money-bill-alt"></i> Rp. {{ number_format($product->price, 0, ',', '.') }}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="quantity-badge">
+                            <i class="fas fa-boxes"></i> {{ $product->quantity }} cup
+                        </div>
+                    </td>
                     <td>
                         <span class="badge-custom {{ $product->status ? 'active' : 'inactive' }}">
                             {{$product->status ? __('common.Active') : __('common.Inactive') }}
                         </span>
                     </td>
-                    <td>{{$product->created_at}}</td>
-                    <td>{{$product->updated_at}}</td>
                     <td>
-                        <div class="btn-group">
+                        <span title="{{$product->created_at}}">
+                            {{ \Carbon\Carbon::parse($product->created_at)->format('M d, Y') }}
+                        </span>
+                    </td>
+                    <td>
+                        <span title="{{$product->updated_at}}">
+                            {{ \Carbon\Carbon::parse($product->updated_at)->format('M d, Y') }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="product-actions">
                             <a href="{{ route('products.edit', $product) }}" class="btn btn-sm btn-primary">
                                 <i class="fas fa-edit"></i>
                             </a>
                             <button class="btn btn-sm btn-danger btn-delete" data-url="{{route('products.destroy', $product)}}">
                                 <i class="fas fa-trash"></i>
                             </button>
-                            <a href="{{ route('products.show', $product) }}" class="btn btn-sm btn-info">
+                            <button class="btn btn-sm btn-view" data-id="{{ $product->id }}" data-url="{{ route('products.show', $product) }}">
                                 <i class="fas fa-eye"></i>
-                            </a>
+                            </button>
                         </div>
                     </td>
                 </tr>
@@ -579,6 +601,126 @@
     #productDetailModal .modal-footer {
         border-top: 1px solid rgba(0,0,0,0.05);
     }
+    /* Tambahan styling yang missing dari customer index */
+
+.card-text {
+    margin-top: 5px;
+    text-align: center;
+}
+
+/* Product Name Badge - seperti name badge di customer */
+.product-name-badge {
+    background-color: #e8f4fc;
+    color: #3498db;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-weight: 500;
+    font-size: 0.85rem;
+    display: inline-block;
+}
+
+/* Price Badge - seperti email badge di customer */
+.price-badge {
+    background-color: #f0f8ff;
+    color: #2980b9;
+    padding: 3px 8px;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    font-weight: 500;
+}
+
+.price-badge i {
+    margin-right: 5px;
+}
+
+/* Barcode Badge - seperti phone badge di customer */
+.barcode-badge {
+    background-color: #f8f4ff;
+    color: #9b59b6;
+    padding: 3px 8px;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+}
+
+.barcode-badge i {
+    margin-right: 5px;
+}
+
+/* Quantity Badge */
+.quantity-badge {
+    background-color: #f0fff0;
+    color: #27ae60;
+    padding: 3px 8px;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    font-weight: 500;
+}
+
+.quantity-badge i {
+    margin-right: 5px;
+}
+
+/* Product Actions - seperti customer actions */
+.product-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-view {
+    background: linear-gradient(135deg, #00bcd4 0%, #0097a7 100%);
+    border: none;
+    color: white;
+    box-shadow: 0 4px 15px rgba(0, 188, 212, 0.3);
+}
+
+.btn-view:hover {
+    background: linear-gradient(135deg, #0097a7 0%, #00838f 100%);
+    box-shadow: 0 6px 20px rgba(0, 188, 212, 0.4);
+}
+
+/* Modal Styles - perbaikan untuk konsistensi */
+.modal-content {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    padding: 15px 20px;
+}
+
+.modal-footer {
+    border-top: 1px solid rgba(0,0,0,0.05);
+}
+
+/* Product Detail Styles - konsisten dengan customer */
+.product-info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.product-info-row:last-child {
+    border-bottom: none;
+}
+
+.product-details {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+}
 </style>
 @endsection
 
@@ -682,11 +824,11 @@ $(".filter-button").click(function() {
             });
         });
     });
-    $(document).on('click', '.btn-info', function(e) {
+    $(document).on('click', '.btn-view', function(e) {
     e.preventDefault();
     
-    // Get the full URL from the button's href
-    var url = $(this).attr('href');
+    // Get the URL from data-url attribute
+    var url = $(this).data('url');
     
     // Show modal and loading spinner
     $('#productDetailModal').modal('show');
@@ -698,7 +840,7 @@ $(".filter-button").click(function() {
         return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
     }
     
-    // Fetch product details via AJAX with the correct URL
+    // Fetch product details via AJAX
     $.ajax({
         url: url,
         type: 'GET',
@@ -714,9 +856,12 @@ $(".filter-button").click(function() {
             $('.spinner-border').hide();
             $('#productDetailContent').show();
             
+            // Check if response has the expected structure
+            var productData = response.data || response;
+            
             // Format date and time
-            const createdDate = new Date(response.data.created_at);
-            const updatedDate = new Date(response.data.updated_at);
+            const createdDate = new Date(productData.created_at);
+            const updatedDate = new Date(productData.updated_at);
             const dateOptions = { 
                 year: 'numeric', 
                 month: 'long', 
@@ -726,34 +871,31 @@ $(".filter-button").click(function() {
             };
             
             // Populate modal with product data
-            $('#modal-product-name').text(response.data.name);
-            $('#modal-product-image').attr('src', response.data.image_url);
-            $('#modal-product-barcode').text(response.data.barcode);
-            $('#modal-product-price').text(`Rp. ${numberWithCommas(response.data.price)}`);
-            $('#modal-product-quantity').text(`${response.data.quantity} cup`);
+            $('#modal-product-name').text(productData.name || 'N/A');
+            $('#modal-product-image').attr('src', productData.image_url || '/path/to/default-image.jpg');
+            $('#modal-product-barcode').text(productData.barcode || 'N/A');
+            $('#modal-product-price').text(`Rp. ${numberWithCommas(productData.price || 0)}`);
+            $('#modal-product-quantity').text(`${productData.quantity || 0} cup`);
             $('#modal-product-created').text(createdDate.toLocaleDateString('id-ID', dateOptions));
             $('#modal-product-updated').text(updatedDate.toLocaleDateString('id-ID', dateOptions));
-            $('#modal-product-description').text(response.data.description || '{{ __("product.No_Description") }}');
+            $('#modal-product-description').text(productData.description || '{{ __("product.No_Description") }}');
             
             // Set product status
-            if (response.data.status) {
+            if (productData.status) {
                 $('#modal-product-status').removeClass('inactive').addClass('active').text('{{ __("common.Active") }}');
             } else {
                 $('#modal-product-status').removeClass('active').addClass('inactive').text('{{ __("common.Inactive") }}');
             }
-            
-            // Set edit link
-            $('#modal-edit-link').attr('href', `/products/${response.data.id}/edit`);
         },
         error: function(xhr, status, error) {
-            // Handle error with more detail
             console.error("AJAX Error:", xhr.responseText);
             $('.spinner-border').hide();
             $('#productDetailContent').html(`
                 <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-triangle"></i> Error: ${xhr.status} - ${error}
+                    <i class="fas fa-exclamation-triangle"></i> 
+                    Error loading product details: ${xhr.status} - ${error}
                     <br>
-                    <small>Check console for more details</small>
+                    <small>Please try again or contact administrator</small>
                 </div>
             `).show();
         }

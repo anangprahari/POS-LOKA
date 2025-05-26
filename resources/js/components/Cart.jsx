@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { createRoot } from "react-dom";
+import { createRoot } from "react-dom/client";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { sum } from "lodash";
@@ -25,9 +25,12 @@ class Cart extends Component {
             showProductDetails: false,
             selectedProduct: null,
             holdOrders: [],
+            selectedCustomer: null,
+            loading: false,
+            activeTab: "products",
         };
-
-        // Original bindings
+        
+        // Binding methods
         this.loadCart = this.loadCart.bind(this);
         this.handleOnChangeBarcode = this.handleOnChangeBarcode.bind(this);
         this.handleScanBarcode = this.handleScanBarcode.bind(this);
@@ -39,16 +42,11 @@ class Cart extends Component {
         this.setCustomerId = this.setCustomerId.bind(this);
         this.handleClickSubmit = this.handleClickSubmit.bind(this);
         this.loadTranslations = this.loadTranslations.bind(this);
-
-        // New method bindings
         this.handleDiscountChange = this.handleDiscountChange.bind(this);
-        this.handleDiscountTypeChange =
-            this.handleDiscountTypeChange.bind(this);
-        this.handlePaymentMethodChange =
-            this.handlePaymentMethodChange.bind(this);
+        this.handleDiscountTypeChange = this.handleDiscountTypeChange.bind(this);
+        this.handlePaymentMethodChange = this.handlePaymentMethodChange.bind(this);
         this.handleNoteChange = this.handleNoteChange.bind(this);
-        this.toggleTransactionHistory =
-            this.toggleTransactionHistory.bind(this);
+        this.toggleTransactionHistory = this.toggleTransactionHistory.bind(this);
         this.loadRecentTransactions = this.loadRecentTransactions.bind(this);
         this.handleCashAmountChange = this.handleCashAmountChange.bind(this);
         this.calculateChange = this.calculateChange.bind(this);
@@ -57,6 +55,13 @@ class Cart extends Component {
         this.retrieveHoldOrder = this.retrieveHoldOrder.bind(this);
         this.showProductDetails = this.showProductDetails.bind(this);
         this.applyItemDiscount = this.applyItemDiscount.bind(this);
+        this.formatCurrency = this.formatCurrency.bind(this);
+        this.formatNumber = this.formatNumber.bind(this);
+        this.viewTransactionDetails = this.viewTransactionDetails.bind(this);
+        this.closeProductDetails = this.closeProductDetails.bind(this);
+        this.handleCancel = this.handleCancel.bind(this);
+        this.handleCheckout = this.handleCheckout.bind(this);
+        this.changeTab = this.changeTab.bind(this);
     }
 
     componentDidMount() {
@@ -65,6 +70,19 @@ class Cart extends Component {
         this.loadProducts();
         this.loadCustomers();
         this.loadRecentTransactions();
+    }
+
+    formatCurrency(amount) {
+        return new Intl.NumberFormat("id-ID", {
+            style: "currency",
+            currency: "IDR",
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+        }).format(amount);
+    }
+
+    formatNumber(number) {
+        return new Intl.NumberFormat("id-ID").format(number);
     }
 
     loadTranslations() {
@@ -101,15 +119,18 @@ class Cart extends Component {
         e.preventDefault();
         const { barcode } = this.state;
         if (!barcode) return;
+
+        this.setState({ loading: true });
         axios
             .post("/cart", { barcode })
             .then(() => {
                 this.loadCart();
-                this.setState({ barcode: "" });
+                this.setState({ barcode: "", loading: false });
             })
-            .catch((err) =>
-                Swal.fire("Error!", err.response.data.message, "error")
-            );
+            .catch((err) => {
+                this.setState({ loading: false });
+                Swal.fire("Error!", err.response.data.message, "error");
+            });
     }
 
     handleChangeQty(product_id, qty) {
@@ -129,36 +150,59 @@ class Cart extends Component {
 
     getTotal(cart) {
         const subtotal = sum(cart.map((c) => c.pivot.quantity * c.price));
-
         let finalTotal = subtotal;
         if (this.state.discount > 0) {
             if (this.state.discountType === "fixed") {
                 finalTotal = Math.max(0, subtotal - this.state.discount);
             } else {
-                // percentage
                 finalTotal = subtotal * (1 - this.state.discount / 100);
             }
         }
-
-        return finalTotal.toFixed(2);
+        return finalTotal;
     }
 
     getSubtotal(cart) {
-        return sum(cart.map((c) => c.pivot.quantity * c.price)).toFixed(2);
+        return sum(cart.map((c) => c.pivot.quantity * c.price));
     }
 
     handleClickDelete(product_id) {
-        axios.delete("/cart/delete", { data: { product_id } }).then(() =>
-            this.setState((state) => ({
-                cart: state.cart.filter((c) => c.id !== product_id),
-            }))
-        );
+        Swal.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#e74c3c",
+            cancelButtonColor: "#6c757d",
+            confirmButtonText: "Yes, remove it!",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                axios
+                    .delete("/cart/delete", { data: { product_id } })
+                    .then(() =>
+                        this.setState((state) => ({
+                            cart: state.cart.filter((c) => c.id !== product_id),
+                        }))
+                    );
+            }
+        });
     }
 
     handleEmptyCart() {
-        axios
-            .post("/cart/empty", { _method: "DELETE" })
-            .then(() => this.setState({ cart: [] }));
+        Swal.fire({
+            title: "Empty Cart?",
+            text: "This will remove all items from your cart!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#e74c3c",
+            cancelButtonColor: "#6c757d",
+            confirmButtonText: "Yes, empty cart!",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                axios
+                    .post("/cart/empty", { _method: "DELETE" })
+                    .then(() => this.setState({ cart: [] }));
+            }
+        });
     }
 
     handleChangeSearch(e) {
@@ -199,11 +243,17 @@ class Cart extends Component {
     }
 
     setCustomerId(e) {
-        this.setState({ customer_id: e.target.value });
+        const customerId = e.target.value;
+        const selectedCustomer = this.state.customers.find(
+            (c) => c.id == customerId
+        );
+        this.setState({
+            customer_id: customerId,
+            selectedCustomer: selectedCustomer,
+        });
     }
 
     handleClickSubmit() {
-        // Validasi stok dan item di keranjang
         if (this.state.cart.length === 0) {
             Swal.fire({
                 title: this.state.translations["error"] || "Error",
@@ -215,7 +265,6 @@ class Cart extends Component {
             return;
         }
 
-        // Validasi jumlah uang tunai jika metode pembayaran adalah cash
         if (
             this.state.paymentMethod === "cash" &&
             parseFloat(this.state.cashAmount) <
@@ -231,7 +280,8 @@ class Cart extends Component {
             return;
         }
 
-        // Persiapkan data untuk dikirim ke server
+        this.setState({ loading: true });
+
         const orderData = {
             customer_id: this.state.customer_id || null,
             payment_method: this.state.paymentMethod,
@@ -244,7 +294,6 @@ class Cart extends Component {
                     : this.getTotal(this.state.cart),
         };
 
-        // Tampilkan loading
         Swal.fire({
             title: this.state.translations["processing"] || "Processing...",
             text: this.state.translations["please_wait"] || "Please wait...",
@@ -255,14 +304,13 @@ class Cart extends Component {
             },
         });
 
-        // Kirim data ke server
         axios
             .post("/orders", orderData)
             .then((response) => {
+                this.setState({ loading: false });
                 Swal.close();
 
                 if (response.data.success) {
-                    // Get the order data for printing
                     const orderData = response.data.order;
 
                     Swal.fire({
@@ -278,13 +326,10 @@ class Cart extends Component {
                         cancelButtonText:
                             this.state.translations["close"] || "Close",
                     }).then((result) => {
-                        // Reset keranjang dan data terkait
                         this.setState({
                             cart: [],
-                            customer_id: null,
-                            customer_name:
-                                this.state.translations["general_customer"] ||
-                                "General Customer",
+                            customer_id: "",
+                            selectedCustomer: null,
                             paymentMethod: "cash",
                             discount: 0,
                             discountType: "fixed",
@@ -293,25 +338,16 @@ class Cart extends Component {
                             search: "",
                         });
 
-                        // Perbarui data transaksi terbaru
                         this.loadRecentTransactions();
 
-                        // Cetak struk jika user memilih "Print Receipt"
                         if (result.isConfirmed && orderData) {
                             this.printReceipt(orderData);
                         }
                     });
-                } else {
-                    Swal.fire({
-                        title: this.state.translations["error"] || "Error",
-                        text:
-                            this.state.translations["order_error"] ||
-                            "There was an error processing your order",
-                        icon: "error",
-                    });
                 }
             })
             .catch((error) => {
+                this.setState({ loading: false });
                 Swal.close();
                 console.error("Error submitting order:", error);
 
@@ -319,7 +355,6 @@ class Cart extends Component {
                     this.state.translations["order_error"] ||
                     "There was an error processing your order";
 
-                // Handle ValidationException
                 if (
                     error.response &&
                     error.response.data &&
@@ -386,7 +421,7 @@ class Cart extends Component {
     calculateChange() {
         const total = parseFloat(this.getTotal(this.state.cart));
         const cash = this.state.cashAmount;
-        return cash >= total ? (cash - total).toFixed(2) : "0.00";
+        return cash >= total ? cash - total : 0;
     }
 
     printReceipt(orderData) {
@@ -913,6 +948,10 @@ class Cart extends Component {
         this.handleClickSubmit();
     };
 
+    changeTab(tab) {
+        this.setState({ activeTab: tab });
+    }
+
     render() {
         const {
             cart,
@@ -930,544 +969,943 @@ class Cart extends Component {
             cashAmount,
             showProductDetails,
             selectedProduct,
+            activeTab,
+            loading
         } = this.state;
 
         const changeAmount = this.calculateChange();
+        const subtotal = this.getSubtotal(cart);
+        const total = this.getTotal(cart);
 
         return (
-            <div className="container-fluid py-3">
-                {/* Inline global styles */}
-                <style>
-                    {`
-                    .cursor-pointer { cursor: pointer; }
-                    .rounded-pill { border-radius: 50rem !important; }
-                    .shadow-sm { box-shadow: 0 .125rem .25rem rgba(0,0,0,.075) !important; }
-                    .text-muted { color: #6c757d !important; }
-                    .text-danger { color: #dc3545 !important; }
-                    .text-center { text-align: center !important; }
-                    .text-end { text-align: end !important; }
-                    .form-control-sm { height: calc(1.5em + .5rem + 2px); padding: .25rem .5rem; font-size: .875rem; }
-                    .tabs {
-                        display: flex;
-                        border-bottom: 1px solid #dee2e6;
-                        margin-bottom: 15px;
+            <div className="pos-container">
+                {/* Global Styles */}
+                <style jsx global>{`
+                    :root {
+                        --primary: #ff7b25; /* Orange primary color */
+                        --primary-light: #fff0e8;
+                        --primary-dark: #e05d00;
+                        --secondary: #3a86ff;
+                        --success: #4cc9f0;
+                        --danger: #f72585;
+                        --warning: rgb(182, 200, 21);
+                        --info: #4895ef;
+                        --light: #f8f9fa;
+                        --dark: #212529;
+                        --gray: #6c757d;
+                        --border-radius: 8px;
+                        --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+                        --transition: all 0.2s ease;
                     }
-                    .tab {
-                        padding: 8px 16px;
-                        cursor: pointer;
-                        border: 1px solid transparent;
-                        border-top-left-radius: 4px;
-                        border-top-right-radius: 4px;
-                        margin-bottom: -1px;
+
+                    .pos-container {
+                        font-family: "Inter", -apple-system, BlinkMacSystemFont,
+                            sans-serif;
+                        background-color: #f5f7fa;
+                        min-height: 100vh;
+                        padding: 1rem;
                     }
-                    .tab.active {
-                        color: #495057;
-                        background-color: #fff;
-                        border-color: #dee2e6 #dee2e6 #fff;
+
+                    .card {
+                        border: none;
+                        border-radius: var(--border-radius);
+                        box-shadow: var(--box-shadow);
+                        transition: var(--transition);
+                        background-color: white;
                     }
+
+                    .card:hover {
+                        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+                    }
+
+                    .btn {
+                        border-radius: var(--border-radius);
+                        font-weight: 500;
+                        transition: var(--transition);
+                        padding: 0.5rem 1rem;
+                        border: none;
+                        position: relative;
+                        overflow: hidden;
+                    }
+
+                    .btn:hover {
+                        transform: translateY(-2px);
+                        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+                    }
+
+                    .btn:active {
+                        transform: translateY(0);
+                    }
+
+                    /* Primary Button */
+                    .btn-primary {
+                        background: linear-gradient(
+                            135deg,
+                            var(--primary) 0%,
+                            var(--primary-dark) 100%
+                        );
+                        color: white;
+                    }
+
+                    .btn-primary:hover {
+                        background: linear-gradient(
+                            135deg,
+                            var(--primary-dark) 0%,
+                            #cc5500 100%
+                        );
+                        box-shadow: 0 4px 12px rgba(255, 123, 37, 0.3);
+                    }
+
+                    /* Secondary Button */
+                    .btn-secondary {
+                        background: linear-gradient(
+                            135deg,
+                            #6c757d 0%,
+                            #495057 100%
+                        );
+                        color: white;
+                    }
+
+                    .btn-secondary:hover {
+                        background: linear-gradient(
+                            135deg,
+                            #495057 0%,
+                            #343a40 100%
+                        );
+                        box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+                    }
+
+                    /* Success Button */
+                    .btn-success {
+                        background: linear-gradient(
+                            135deg,
+                            #28a745 0%,
+                            #218838 100%
+                        );
+                        color: white;
+                    }
+
+                    .btn-success:hover {
+                        background: linear-gradient(
+                            135deg,
+                            #218838 0%,
+                            #1e7e34 100%
+                        );
+                        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+                    }
+
+                    /* Danger Button */
+                    .btn-danger {
+                        background: linear-gradient(
+                            135deg,
+                            #dc3545 0%,
+                            #c82333 100%
+                        );
+                        color: white;
+                    }
+
+                    .btn-danger:hover {
+                        background: linear-gradient(
+                            135deg,
+                            #c82333 0%,
+                            #bd2130 100%
+                        );
+                        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+                    }
+
+                    /* Warning Button */
+                    .btn-warning {
+                        background: linear-gradient(
+                            135deg,
+                            #ffc107 0%,
+                            #e0a800 100%
+                        );
+                        color: #212529;
+                    }
+
+                    .btn-warning:hover {
+                        background: linear-gradient(
+                            135deg,
+                            #e0a800 0%,
+                            #d39e00 100%
+                        );
+                        box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+                    }
+
+                    /* Info Button */
+                    .btn-info {
+                        background: linear-gradient(
+                            135deg,
+                            #17a2b8 0%,
+                            #138496 100%
+                        );
+                        color: white;
+                    }
+
+                    .btn-info:hover {
+                        background: linear-gradient(
+                            135deg,
+                            #138496 0%,
+                            #117a8b 100%
+                        );
+                        box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
+                    }
+
+                    /* Outline Buttons */
+                    .btn-outline-primary {
+                        background: transparent;
+                        border: 1px solid var(--primary);
+                        color: var(--primary);
+                    }
+
+                    .btn-outline-primary:hover {
+                        background: rgba(255, 123, 37, 0.1);
+                    }
+
+                    /* Hold Button - Soft Orange */
+                    .btn-hold {
+                        background: linear-gradient(
+                            135deg,
+                            #ffd166 0%,
+                            /* Soft yellow-orange */ #f4a261 100%
+                                /* Muted orange */
+                        );
+                        color: #333; /* Dark text for contrast */
+                    }
+
+                    .btn-hold:hover {
+                        background: linear-gradient(
+                            135deg,
+                            #f4a261 0%,
+                            #e76f51 100%
+                        );
+                    }
+
+                    /* Retrieve Button - Neutral Gray */
+                    .btn-retrieve {
+                        background: linear-gradient(
+                            135deg,
+                            #b8b8b8 0%,
+                            /* Light gray */ #8d8d8d 100% /* Medium gray */
+                        );
+                        color: white;
+                    }
+
+                    .btn-retrieve:hover {
+                        background: linear-gradient(
+                            135deg,
+                            #8d8d8d 0%,
+                            #6c6c6c 100%
+                        );
+                    }
+
+                    /* Disabled Buttons */
+                    .btn:disabled {
+                        opacity: 0.65;
+                        transform: none !important;
+                        box-shadow: none !important;
+                    }
+
+                    /* Button Icons */
+                    .btn i {
+                        margin-right: 5px;
+                    }
+
+                    .btn-orange {
+                        background: linear-gradient(
+                            135deg,
+                            var(--primary) 0%,
+                            var(--primary-dark) 100%
+                        );
+                        color: white;
+                        border: 1px solid var(--primary);
+                    }
+
+                    .btn-orange:hover {
+                        background: linear-gradient(
+                            135deg,
+                            var(--primary-dark) 0%,
+                            #cc5500 100%
+                        );
+                        box-shadow: 0 4px 12px rgba(255, 123, 37, 0.3);
+                    }
+
+                    .btn-outline-orange {
+                        background: transparent;
+                        color: var(--primary);
+                        border: 1px solid var(--primary);
+                    }
+
+                    .btn-outline-orange:hover {
+                        background: rgba(255, 123, 37, 0.1);
+                    }
+
                     .badge {
-                        display: inline-block;
-                        padding: 0.25em 0.4em;
-                        font-size: 75%;
-                        font-weight: 700;
-                        line-height: 1;
-                        text-align: center;
-                        white-space: nowrap;
-                        vertical-align: baseline;
-                        border-radius: 0.25rem;
+                        font-weight: 500;
+                        padding: 0.35em 0.65em;
+                        border-radius: 50px;
                     }
-                    .badge-success { background-color: #28a745; color: white; }
-                    .badge-warning { background-color: #ffc107; color: black; }
-                    .badge-danger { background-color: #dc3545; color: white; }
-                    .badge-info { background-color: #17a2b8; color: white; }
-                    .modal {
-                        display: block;
-                        position: fixed;
-                        z-index: 1050;
-                        left: 0;
-                        top: 0;
+                    .badge.bg-primary {
+                        background-color: var(--primary) !important;
+                    }
+
+                    .form-control,
+                    .form-select {
+                        border-radius: var(--border-radius);
+                        padding: 0.5rem 0.75rem;
+                        border: 1px solid #ced4da;
+                        transition: var(--transition);
+                    }
+
+                    .form-control:focus,
+                    .form-select:focus {
+                        border-color: var(--primary);
+                        box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+                    }
+
+                    .nav-tabs {
+                        border-bottom: 2px solid #dee2e6;
+                    }
+
+                    .nav-tabs .nav-link {
+                        border: none;
+                        color: var(--gray);
+                        font-weight: 500;
+                        padding: 0.75rem 1.5rem;
+                        border-radius: 0;
+                        margin-right: 0.5rem;
+                    }
+
+                    .nav-tabs .nav-link.active {
+                        color: var(--primary);
+                        background-color: transparent;
+                        border-bottom: 2px solid var(--primary);
+                    }
+
+                    .nav-tabs .nav-link:hover:not(.active) {
+                        color: var(--primary);
+                        border-bottom: 2px solid var(--primary-light);
+                    }
+
+                    .products-grid {
+                        display: grid;
+                        grid-template-columns: repeat(4, 1fr);
+                        gap: 1rem;
+                        padding: 8px;
+                    }
+
+                    .product-card {
+                        border: 1px solid #f0f0f0;
+                        border-radius: var(--border-radius);
+                        overflow: hidden;
+                        transition: var(--transition);
+                        background: white;
+                    }
+
+                    .product-card:hover {
+                        transform: translateY(-3px);
+                        box-shadow: 0 6px 12px rgba(255, 123, 37, 0.15);
+                    }
+
+                    .product-img-container {
+                        position: relative;
+                        height: 140px;
+                        overflow: hidden;
+                    }
+
+                    .product-img {
                         width: 100%;
                         height: 100%;
-                        overflow: auto;
-                        background-color: rgba(0,0,0,0.4);
+                        object-fit: cover;
+                        transition: transform 0.3s ease;
                     }
+
+                    .product-card:hover .product-img {
+                        transform: scale(1.05);
+                    }
+
+                    .product-barcode {
+                        position: absolute;
+                        top: 8px;
+                        left: 8px;
+                        background: rgba(255, 255, 255, 0.9);
+                        padding: 2px 6px;
+                        border-radius: 4px;
+                        font-size: 11px;
+                        font-family: "Courier New", monospace;
+                        color: var(--dark);
+                    }
+
+                    .product-stock-badge {
+                        position: absolute;
+                        top: 8px;
+                        right: 8px;
+                        font-size: 11px;
+                        padding: 2px 6px;
+                    }
+
+                    .product-info {
+                        padding: 12px;
+                    }
+
+                    .product-name {
+                        font-size: 14px;
+                        font-weight: 600;
+                        margin-bottom: 8px;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                    }
+
+                    .product-details {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                    }
+
+                    .product-price {
+                        font-weight: 700;
+                        color: var(--primary);
+                        font-size: 14px;
+                    }
+
+                    .product-stock {
+                        font-size: 12px;
+                        color: var(--gray);
+                    }
+
+                    .cart-item {
+                        transition: background-color 0.2s ease;
+                        padding: 0.75rem 0;
+                        border-bottom: 1px solid #f0f0f0;
+                    }
+
+                    .cart-item:last-child {
+                        border-bottom: none;
+                    }
+
+                    .cart-item:hover {
+                        background-color: var(--primary-light);
+                    }
+
+                    .qty-input {
+                        width: 60px;
+                        text-align: center;
+                        border-radius: var(--border-radius);
+                        border: 1px solid #ced4da;
+                        padding: 0.25rem;
+                    }
+
+                    .discount-badge {
+                        background-color: #f0f7ff;
+                        color: var(--primary);
+                        font-size: 0.75rem;
+                    }
+
+                    .modal-overlay {
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        bottom: 0;
+                        background-color: rgba(0, 0, 0, 0.5);
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        z-index: 1050;
+                    }
+
                     .modal-content {
-                        background-color: #fefefe;
-                        margin: 10% auto;
-                        padding: 20px;
-                        border: 1px solid #888;
-                        width: 80%;
-                        max-width: 500px;
-                        border-radius: 5px;
+                        background-color: white;
+                        border-radius: var(--border-radius);
+                        width: 90%;
+                        max-width: 800px;
+                        max-height: 90vh;
+                        overflow-y: auto;
+                        animation: modalFadeIn 0.3s ease;
                     }
-                    .close-btn {
-                        color: #aaa;
-                        float: right;
-                        font-size: 28px;
-                        font-weight: bold;
-                        cursor: pointer;
-                    }
-                    .strikethrough {
-                        text-decoration: line-through;
-                        color: #999;
-                    }
-                    `}
-                </style>
 
-                {/* Toggle between normal view and transaction history */}
-                <div className="tabs">
-                    <div
-                        className={`tab ${
-                            !showTransactionHistory ? "active" : ""
-                        }`}
-                        onClick={() =>
-                            this.setState({ showTransactionHistory: false })
+                    @keyframes modalFadeIn {
+                        from {
+                            opacity: 0;
+                            transform: translateY(-20px);
                         }
-                    >
-                        {translations["pos"] || "Point of Sale"}
-                    </div>
-                    <div
-                        className={`tab ${
-                            showTransactionHistory ? "active" : ""
-                        }`}
-                        onClick={this.toggleTransactionHistory}
-                    >
-                        {translations["transactions"] || "Recent Transactions"}
-                    </div>
-                </div>
+                        to {
+                            opacity: 1;
+                            transform: translateY(0);
+                        }
+                    }
 
-                {/* Main Content */}
-                {showTransactionHistory ? (
-                    // Transaction History View
-                    <div className="row">
+                    .close-btn {
+                        font-size: 1.5rem;
+                        color: var(--gray);
+                        cursor: pointer;
+                        transition: color 0.2s ease;
+                    }
+
+                    .close-btn:hover {
+                        color: var(--danger);
+                    }
+                    .text-primary {
+                        color: var(--primary) !important;
+                    }
+
+                    .loading-spinner {
+                        display: inline-block;
+                        width: 1.5rem;
+                        height: 1.5rem;
+                        border: 3px solid rgba(255, 255, 255, 0.3);
+                        border-radius: 50%;
+                        border-top-color: white;
+                        animation: spin 1s ease-in-out infinite;
+                    }
+
+                    @keyframes spin {
+                        to {
+                            transform: rotate(360deg);
+                        }
+                    }
+
+                    @media (max-width: 768px) {
+                        .pos-container {
+                            padding: 0.5rem;
+                        }
+
+                        .nav-tabs .nav-link {
+                            padding: 0.5rem 1rem;
+                            font-size: 0.875rem;
+                        }
+                    }
+                `}</style>
+
+                {/* Main Layout */}
+                <div className="container-fluid">
+                    {/* Header */}
+                    <div className="row mb-4">
                         <div className="col-12">
-                            <div className="card shadow-sm">
-                                <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                                    <h5 className="mb-0">
-                                        {translations["recent_transactions"] ||
-                                            "Recent Transactions"}
-                                    </h5>
-                                    <button
-                                        className="btn btn-sm btn-light"
-                                        onClick={() =>
-                                            this.loadRecentTransactions()
-                                        }
-                                    >
-                                        <i className="fas fa-sync-alt"></i>{" "}
-                                        {translations["refresh"] || "Refresh"}
-                                    </button>
-                                </div>
-                                <div className="card-body">
-                                    <div className="table-responsive">
-                                        <table className="table table-hover">
-                                            <thead>
-                                                <tr>
-                                                    <th>
-                                                        {translations[
-                                                            "invoice_id"
-                                                        ] || "Invoice ID"}
-                                                    </th>
-                                                    <th>
-                                                        {translations["date"] ||
-                                                            "Date"}
-                                                    </th>
-                                                    <th>
-                                                        {translations[
-                                                            "customer"
-                                                        ] || "Customer"}
-                                                    </th>
-                                                    <th>
-                                                        {translations[
-                                                            "payment_method"
-                                                        ] || "Payment Method"}
-                                                    </th>
-                                                    <th className="text-end">
-                                                        {translations[
-                                                            "subtotal"
-                                                        ] || "Subtotal"}
-                                                    </th>
-                                                    <th className="text-end">
-                                                        {translations[
-                                                            "discount"
-                                                        ] || "Discount"}
-                                                    </th>
-                                                    <th className="text-end">
-                                                        {translations[
-                                                            "total"
-                                                        ] || "Total"}
-                                                    </th>
-                                                    <th>
-                                                        {translations[
-                                                            "actions"
-                                                        ] || "Actions"}
-                                                    </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {recentTransactions.length >
-                                                0 ? (
-                                                    recentTransactions.map(
-                                                        (transaction) => (
-                                                            <tr
-                                                                key={
-                                                                    transaction.id
-                                                                }
-                                                            >
-                                                                <td>
-                                                                    #
-                                                                    {
-                                                                        transaction.invoice_number
-                                                                    }
-                                                                </td>
-                                                                <td>
-                                                                    {new Date(
-                                                                        transaction.created_at
-                                                                    ).toLocaleString()}
-                                                                </td>
-                                                                <td>
-                                                                    {transaction.customer
-                                                                        ? `${transaction.customer.first_name} ${transaction.customer.last_name}`
-                                                                        : translations[
-                                                                              "general_customer"
-                                                                          ] ||
-                                                                          "General Customer"}
-                                                                </td>
-                                                                <td>
-                                                                    <span
-                                                                        className={`badge badge-${
-                                                                            transaction.payment_method ===
-                                                                            "cash"
-                                                                                ? "success"
-                                                                                : transaction.payment_method ===
-                                                                                  "card"
-                                                                                ? "info"
-                                                                                : transaction.payment_method ===
-                                                                                  "bank_transfer"
-                                                                                ? "warning"
-                                                                                : "primary" // untuk e-wallet atau metode lainnya
-                                                                        }`}
-                                                                    >
-                                                                        {(() => {
-                                                                            // Menampilkan payment method yang digunakan secara dinamis
-                                                                            switch (
-                                                                                transaction.payment_method
-                                                                            ) {
-                                                                                case "cash":
-                                                                                    return (
-                                                                                        translations[
-                                                                                            "cash"
-                                                                                        ] ||
-                                                                                        "CASH"
-                                                                                    );
-                                                                                case "card":
-                                                                                    return (
-                                                                                        translations[
-                                                                                            "card"
-                                                                                        ] ||
-                                                                                        "CARD"
-                                                                                    );
-                                                                                case "bank_transfer":
-                                                                                    return (
-                                                                                        translations[
-                                                                                            "bank_transfer"
-                                                                                        ] ||
-                                                                                        "BANK TRANSFER"
-                                                                                    );
-                                                                                case "ewallet":
-                                                                                    return (
-                                                                                        translations[
-                                                                                            "ewallet"
-                                                                                        ] ||
-                                                                                        "E-WALLET"
-                                                                                    );
-                                                                                default:
-                                                                                    return transaction.payment_method.toUpperCase();
-                                                                            }
-                                                                        })()}
-                                                                    </span>
-                                                                </td>
-                                                                <td className="text-end">
-                                                                    {
-                                                                        window
-                                                                            .APP
-                                                                            .currency_symbol
-                                                                    }{" "}
-                                                                    {parseFloat(
-                                                                        transaction.subtotal
-                                                                    ).toFixed(
-                                                                        2
-                                                                    )}
-                                                                </td>
-                                                                <td className="text-end text-danger">
-                                                                    {(() => {
-                                                                        const discountType =
-                                                                            transaction.discount_type ||
-                                                                            "fixed";
-                                                                        // Fix: Use transaction.discount instead of discount
-                                                                        const discount =
-                                                                            transaction.discount ||
-                                                                            0;
-
-                                                                        const discountAmount =
-                                                                            discountType ===
-                                                                            "percentage"
-                                                                                ? parseFloat(
-                                                                                      transaction.subtotal
-                                                                                  ) *
-                                                                                  (discount /
-                                                                                      100)
-                                                                                : discount;
-
-                                                                        return discountAmount >
-                                                                            0
-                                                                            ? `- ${
-                                                                                  window
-                                                                                      .APP
-                                                                                      .currency_symbol
-                                                                              } ${parseFloat(
-                                                                                  discountAmount
-                                                                              ).toFixed(
-                                                                                  2
-                                                                              )}`
-                                                                            : `${window.APP.currency_symbol} 0.00`;
-                                                                    })()}
-                                                                </td>
-                                                                <td className="text-end font-weight-bold">
-                                                                    {
-                                                                        window
-                                                                            .APP
-                                                                            .currency_symbol
-                                                                    }{" "}
-                                                                    {(() => {
-                                                                        const subtotal =
-                                                                            parseFloat(
-                                                                                transaction.subtotal
-                                                                            );
-                                                                        const discount =
-                                                                            transaction.discount ||
-                                                                            0;
-                                                                        const discountType =
-                                                                            transaction.discount_type ||
-                                                                            "fixed";
-                                                                        const discountAmount =
-                                                                            discountType ===
-                                                                            "percentage"
-                                                                                ? subtotal *
-                                                                                  (discount /
-                                                                                      100)
-                                                                                : discount;
-                                                                        const totalAfterDiscount =
-                                                                            subtotal -
-                                                                            discountAmount;
-                                                                        return totalAfterDiscount.toFixed(
-                                                                            2
-                                                                        );
-                                                                    })()}
-                                                                </td>
-
-                                                                <td>
-                                                                    <div className="btn-group btn-group-sm">
-                                                                        <button
-                                                                            className="btn btn-outline-primary"
-                                                                            onClick={() =>
-                                                                                this.viewTransactionDetails(
-                                                                                    transaction.id
-                                                                                )
-                                                                            }
-                                                                            title={
-                                                                                translations[
-                                                                                    "view_details"
-                                                                                ] ||
-                                                                                "View Details"
-                                                                            }
-                                                                        >
-                                                                            <i className="fas fa-eye"></i>
-                                                                        </button>
-                                                                        <button
-                                                                            className="btn btn-outline-success"
-                                                                            onClick={() =>
-                                                                                this.printReceipt(
-                                                                                    transaction
-                                                                                )
-                                                                            }
-                                                                            title={
-                                                                                translations[
-                                                                                    "print_receipt"
-                                                                                ] ||
-                                                                                "Print Receipt"
-                                                                            }
-                                                                        >
-                                                                            <i className="fas fa-print"></i>
-                                                                        </button>
-                                                                    </div>
-                                                                </td>
-                                                            </tr>
-                                                        )
-                                                    )
-                                                ) : (
-                                                    <tr>
-                                                        <td
-                                                            colSpan="8"
-                                                            className="text-center py-3"
-                                                        >
-                                                            {translations[
-                                                                "no_transactions"
-                                                            ] ||
-                                                                "No transactions found"}
-                                                        </td>
-                                                    </tr>
-                                                )}
-                                            </tbody>
-                                        </table>
-                                    </div>
+                            <div className="card p-3">
+                                <div className="d-flex justify-content-between align-items-center">
+                                    <h2 className="mb-0 text-primary">
+                                        {window.APP.store_name || "POS System"}
+                                    </h2>
+                                        <div className="d-flex gap-2">
+                                            <button
+                                                className={`btn ${
+                                                    showTransactionHistory
+                                                        ? "btn-outline-orange" // Ketika aktif
+                                                        : "btn-orange" // Ketika tidak aktif
+                                                }`}
+                                                onClick={() =>
+                                                    this.setState({
+                                                        showTransactionHistory: false,
+                                                    })
+                                                }
+                                            >
+                                                <i className="fas fa-shopping-cart me-2"></i>
+                                                {translations["pos"] ||
+                                                    "Point of Sale"}
+                                            </button>
+                                            <button
+                                                className={`btn ${
+                                                    showTransactionHistory
+                                                        ? "btn-orange" // Ketika aktif
+                                                        : "btn-outline-orange" // Ketika tidak aktif
+                                                }`}
+                                                onClick={
+                                                    this
+                                                        .toggleTransactionHistory
+                                                }
+                                            >
+                                                <i className="fas fa-history me-2"></i>
+                                                {translations["transactions"] ||
+                                                    "Transactions"}
+                                            </button>
+                                        </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                ) : (
-                    <div className="row">
-                        {/* Sidebar Cart */}
-                        <div className="col-12 col-lg-4 mb-4">
-                            <div className="card shadow-sm h-100">
-                                <div className="card-body d-flex flex-column">
-                                    {/* Barcode input */}
-                                    <form
-                                        className="mb-3 d-flex gap-2 align-items-center"
-                                        onSubmit={this.handleScanBarcode}
-                                    >
-                                        <input
-                                            type="text"
-                                            className="form-control rounded-pill shadow-sm px-4"
-                                            placeholder={
-                                                translations["scan_barcode"] ||
-                                                "Scan Barcode"
-                                            }
-                                            value={barcode}
-                                            onChange={
-                                                this.handleOnChangeBarcode
-                                            }
-                                        />
-                                        <button
-                                            className="btn btn-success rounded-pill shadow-sm px-4 d-flex align-items-center"
-                                            type="submit"
-                                        >
-                                            <i
-                                                className="fas fa-barcode"
-                                                style={{ marginRight: "5px" }}
-                                            ></i>
-                                            {translations["scan"] || "Scan"}
-                                        </button>
-                                    </form>
 
-                                    {/* Customer Select */}
-                                    <select
-                                        className="form-select mb-3"
-                                        onChange={this.setCustomerId}
-                                        value={this.state.customer_id}
-                                    >
-                                        <option value="">
-                                            {translations["general_customer"] ||
-                                                "General Customer"}
-                                        </option>
-                                        {customers.map((cus) => (
-                                            <option key={cus.id} value={cus.id}>
-                                                {cus.first_name} {cus.last_name}
-                                            </option>
-                                        ))}
-                                    </select>
-
-                                    {/* Hold/Retrieve Order buttons */}
-                                    <div className="d-flex gap-2 mb-3">
+                    {showTransactionHistory ? (
+                        /* Transactions View */
+                        <div className="row">
+                            <div className="col-12">
+                                <div className="card">
+                                    <div className="card-header bg-white d-flex justify-content-between align-items-center border-bottom">
+                                        <h5 className="mb-0 text-dark">
+                                            <i className="fas fa-history me-2 text-primary mr-2"></i>
+                                            {translations[
+                                                "recent_transactions"
+                                            ] || "Recent Transactions"}
+                                        </h5>
                                         <button
-                                            className="btn btn-sm btn-warning w-50"
-                                            onClick={this.holdOrder}
-                                            disabled={cart.length === 0}
+                                            className="btn btn-sm btn-outline-primary"
+                                            onClick={
+                                                this.loadRecentTransactions
+                                            }
                                         >
-                                            <i className="fas fa-pause me-1"></i>{" "}
-                                            {translations["hold_order"] ||
-                                                "Hold Order"}
-                                        </button>
-                                        <button
-                                            className="btn btn-sm btn-info w-50"
-                                            onClick={this.retrieveHoldOrder}
-                                        >
-                                            <i className="fas fa-folder-open me-1"></i>{" "}
-                                            {translations["retrieve_order"] ||
-                                                "Retrieve Order"}
+                                            <i className="fas fa-sync-alt me-1 mr-2"></i>
+                                            {translations["refresh"] ||
+                                                "Refresh"}
                                         </button>
                                     </div>
-
-                                    {/* Cart Items */}
-                                    <div className="flex-grow-1 overflow-auto">
-                                        {cart.length ? (
-                                            <table className="table table-borderless">
-                                                <thead>
+                                    <div className="card-body p-0">
+                                        <div className="table-responsive">
+                                            <table className="table table-hover mb-0">
+                                                <thead className="bg-light">
                                                     <tr>
-                                                        <th>
-                                                            {translations[
-                                                                "product_name"
-                                                            ] || "Product Name"}
+                                                        <th className="border-0">
+                                                            #
                                                         </th>
-                                                        <th>
+                                                        <th className="border-0">
                                                             {translations[
-                                                                "quantity"
-                                                            ] || "Quantity"}
+                                                                "date"
+                                                            ] || "Date"}
                                                         </th>
-                                                        <th className="text-end">
+                                                        <th className="border-0">
                                                             {translations[
-                                                                "price"
-                                                            ] || "Price"}
+                                                                "customer"
+                                                            ] || "Customer"}
+                                                        </th>
+                                                        <th className="border-0">
+                                                            {translations[
+                                                                "payment_method"
+                                                            ] || "Payment"}
+                                                        </th>
+                                                        <th className="border-0 text-end">
+                                                            {translations[
+                                                                "total"
+                                                            ] || "Total"}
+                                                        </th>
+                                                        <th className="border-0 text-center">
+                                                            {translations[
+                                                                "actions"
+                                                            ] || "Actions"}
                                                         </th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    {cart.map((c) => (
-                                                        <tr key={c.id}>
-                                                            <td>
-                                                                <div>
-                                                                    {c.name}
-                                                                </div>
-                                                                {c.original_price && (
-                                                                    <small className="text-success">
-                                                                        {c
-                                                                            .discount_info
-                                                                            .type ===
-                                                                        "percentage"
-                                                                            ? `${c.discount_info.amount}% off`
-                                                                            : `${window.APP.currency_symbol}${c.discount_info.amount} off`}
-                                                                    </small>
-                                                                )}
+                                                    {recentTransactions.length >
+                                                    0 ? (
+                                                        recentTransactions.map(
+                                                            (transaction) => (
+                                                                <tr
+                                                                    key={
+                                                                        transaction.id
+                                                                    }
+                                                                    className="border-top"
+                                                                >
+                                                                    <td>
+                                                                        #
+                                                                        {
+                                                                            transaction.invoice_number
+                                                                        }
+                                                                    </td>
+                                                                    <td>
+                                                                        {new Date(
+                                                                            transaction.created_at
+                                                                        ).toLocaleString()}
+                                                                    </td>
+                                                                    <td>
+                                                                        {transaction.customer
+                                                                            ? `${transaction.customer.first_name} ${transaction.customer.last_name}`
+                                                                            : translations[
+                                                                                  "general_customer"
+                                                                              ] ||
+                                                                              "General Customer"}
+                                                                    </td>
+                                                                    <td>
+                                                                        <span
+                                                                            className={`badge bg-${
+                                                                                transaction.payment_method ===
+                                                                                "cash"
+                                                                                    ? "success"
+                                                                                    : transaction.payment_method ===
+                                                                                      "card"
+                                                                                    ? "info"
+                                                                                    : transaction.payment_method ===
+                                                                                      "bank_transfer"
+                                                                                    ? "warning"
+                                                                                    : "primary"
+                                                                            }-light text-${
+                                                                                transaction.payment_method ===
+                                                                                "cash"
+                                                                                    ? "success"
+                                                                                    : transaction.payment_method ===
+                                                                                      "card"
+                                                                                    ? "info"
+                                                                                    : transaction.payment_method ===
+                                                                                      "bank_transfer"
+                                                                                    ? "warning"
+                                                                                    : "primary"
+                                                                            }`}
+                                                                        >
+                                                                            {transaction.payment_method.toUpperCase()}
+                                                                        </span>
+                                                                    </td>
+                                                                    <td className="text-end fw-bold">
+                                                                        {
+                                                                            window
+                                                                                .APP
+                                                                                .currency_symbol
+                                                                        }{" "}
+                                                                        {parseFloat(
+                                                                            transaction.total
+                                                                        ).toFixed(
+                                                                            2
+                                                                        )}
+                                                                    </td>
+                                                                    <td className="text-center">
+                                                                        <div className="btn-group btn-group-sm">
+                                                                            <button
+                                                                                className="btn btn-outline-primary btn-sm"
+                                                                                onClick={() =>
+                                                                                    this.viewTransactionDetails(
+                                                                                        transaction.id
+                                                                                    )
+                                                                                }
+                                                                                title={
+                                                                                    translations[
+                                                                                        "view_details"
+                                                                                    ] ||
+                                                                                    "View Details"
+                                                                                }
+                                                                            >
+                                                                                <i className="fas fa-eye"></i>
+                                                                            </button>
+                                                                            <button
+                                                                                className="btn btn-outline-success btn-sm"
+                                                                                onClick={() =>
+                                                                                    this.printReceipt(
+                                                                                        transaction
+                                                                                    )
+                                                                                }
+                                                                                title={
+                                                                                    translations[
+                                                                                        "print_receipt"
+                                                                                    ] ||
+                                                                                    "Print Receipt"
+                                                                                }
+                                                                            >
+                                                                                <i className="fas fa-print"></i>
+                                                                            </button>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            )
+                                                        )
+                                                    ) : (
+                                                        <tr>
+                                                            <td
+                                                                colSpan="6"
+                                                                className="text-center py-4 text-muted"
+                                                            >
+                                                                <i className="fas fa-inbox fa-2x mb-2"></i>
+                                                                <p>
+                                                                    {translations[
+                                                                        "no_transactions"
+                                                                    ] ||
+                                                                        "No transactions found"}
+                                                                </p>
                                                             </td>
-                                                            <td className="d-flex align-items-center">
-                                                                <input
-                                                                    type="number"
-                                                                    min="1"
-                                                                    className="form-control form-control-sm me-2"
-                                                                    style={{
-                                                                        width: "60px",
-                                                                    }}
-                                                                    value={
-                                                                        c.pivot
-                                                                            .quantity
-                                                                    }
-                                                                    onChange={(
-                                                                        e
-                                                                    ) =>
-                                                                        this.handleChangeQty(
-                                                                            c.id,
+                                                        </tr>
+                                                    )}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        /* POS View */
+                        <div className="row">
+                            {/* Cart Sidebar */}
+                            <div className="col-lg-4 mb-4">
+                                <div className="card h-100">
+                                    <div className="card-header bg-white d-flex justify-content-between align-items-center border-bottom">
+                                        <h5 className="mb-0 text-dark">
+                                            <i className="fas fa-shopping-cart me-2 text-primary mr-2"></i>
+                                            {translations["cart"] || "Cart"}
+                                        </h5>
+                                        <span className="badge bg-primary">
+                                            {cart.length}{" "}
+                                            {translations["items"] || "items"}
+                                        </span>
+                                    </div>
+
+                                    <div className="card-body d-flex flex-column p-0">
+                                        {/* Customer and Barcode Section */}
+                                        <div className="p-3 border-bottom">
+                                            <div className="mb-3">
+                                                <label className="form-label small text-muted mb-1">
+                                                    {translations["customer"] ||
+                                                        "Customer"}
+                                                </label>
+                                                <select
+                                                    className="form-select"
+                                                    onChange={
+                                                        this.setCustomerId
+                                                    }
+                                                    value={
+                                                        this.state.customer_id
+                                                    }
+                                                >
+                                                    <option value="">
+                                                        {translations[
+                                                            "general_customer"
+                                                        ] || "General Customer"}
+                                                    </option>
+                                                    {customers.map((cus) => (
+                                                        <option
+                                                            key={cus.id}
+                                                            value={cus.id}
+                                                        >
+                                                            {cus.first_name}{" "}
+                                                            {cus.last_name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+
+                                            <form
+                                                onSubmit={
+                                                    this.handleScanBarcode
+                                                }
+                                                className="mb-0"
+                                            >
+                                                <label className="form-label small text-muted mb-1">
+                                                    {translations[
+                                                        "scan_barcode"
+                                                    ] || "Scan Barcode"}
+                                                </label>
+                                                <div className="input-group">
+                                                    <input
+                                                        type="text"
+                                                        className="form-control"
+                                                        placeholder={
+                                                            translations[
+                                                                "scan_barcode_placeholder"
+                                                            ] || "Enter barcode"
+                                                        }
+                                                        value={barcode}
+                                                        onChange={
+                                                            this
+                                                                .handleOnChangeBarcode
+                                                        }
+                                                    />
+                                                    <button
+                                                        className="btn btn-primary"
+                                                        type="submit"
+                                                        disabled={loading}
+                                                    >
+                                                        {loading ? (
+                                                            <span className="loading-spinner"></span>
+                                                        ) : (
+                                                            <i className="fas fa-barcode"></i>
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+
+                                        {/* Cart Items */}
+                                        <div
+                                            className="flex-grow-1 overflow-auto"
+                                            style={{ maxHeight: "400px" }}
+                                        >
+                                            {cart.length > 0 ? (
+                                                <div className="p-3">
+                                                    {cart.map((item) => (
+                                                        <div
+                                                            key={item.id}
+                                                            className="cart-item"
+                                                        >
+                                                            <div className="d-flex justify-content-between align-items-start">
+                                                                <div className="flex-grow-1">
+                                                                    <div className="fw-medium">
+                                                                        {
+                                                                            item.name
+                                                                        }
+                                                                    </div>
+                                                                    {item.original_price && (
+                                                                        <small className="discount-badge rounded px-2 py-1">
+                                                                            {item
+                                                                                .discount_info
+                                                                                .type ===
+                                                                            "percentage"
+                                                                                ? `${item.discount_info.amount}% off`
+                                                                                : `${window.APP.currency_symbol}${item.discount_info.amount} off`}
+                                                                        </small>
+                                                                    )}
+                                                                </div>
+                                                                <div className="text-end">
+                                                                    {item.original_price && (
+                                                                        <div className="text-decoration-line-through text-muted small">
+                                                                            {
+                                                                                window
+                                                                                    .APP
+                                                                                    .currency_symbol
+                                                                            }{" "}
+                                                                            {parseFloat(
+                                                                                item.original_price
+                                                                            ).toFixed(
+                                                                                2
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+                                                                    <div className="fw-bold">
+                                                                        {
+                                                                            window
+                                                                                .APP
+                                                                                .currency_symbol
+                                                                        }{" "}
+                                                                        {(
+                                                                            item.price *
+                                                                            item
+                                                                                .pivot
+                                                                                .quantity
+                                                                        ).toFixed(
+                                                                            2
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="d-flex justify-content-between align-items-center mt-2">
+                                                                <div className="d-flex align-items-center">
+                                                                    <input
+                                                                        type="number"
+                                                                        min="1"
+                                                                        className="qty-input me-2"
+                                                                        value={
+                                                                            item
+                                                                                .pivot
+                                                                                .quantity
+                                                                        }
+                                                                        onChange={(
                                                                             e
-                                                                                .target
-                                                                                .value
-                                                                        )
-                                                                    }
-                                                                />
-                                                                <div className="btn-group btn-group-sm">
+                                                                        ) =>
+                                                                            this.handleChangeQty(
+                                                                                item.id,
+                                                                                e
+                                                                                    .target
+                                                                                    .value
+                                                                            )
+                                                                        }
+                                                                    />
                                                                     <button
-                                                                        className="btn btn-sm btn-outline-danger"
+                                                                        className="btn btn-sm btn-outline-danger me-1"
                                                                         onClick={() =>
                                                                             this.handleClickDelete(
-                                                                                c.id
+                                                                                item.id
                                                                             )
+                                                                        }
+                                                                        title={
+                                                                            translations[
+                                                                                "remove"
+                                                                            ] ||
+                                                                            "Remove"
                                                                         }
                                                                     >
                                                                         <i className="fas fa-trash"></i>
@@ -1476,563 +1914,660 @@ class Cart extends Component {
                                                                         className="btn btn-sm btn-outline-primary"
                                                                         onClick={() =>
                                                                             this.applyItemDiscount(
-                                                                                c.id
+                                                                                item.id
                                                                             )
                                                                         }
                                                                         title={
                                                                             translations[
-                                                                                "apply_discount"
+                                                                                "discount"
                                                                             ] ||
-                                                                            "Apply Discount"
+                                                                            "Discount"
                                                                         }
                                                                     >
                                                                         <i className="fas fa-percent"></i>
                                                                     </button>
                                                                 </div>
-                                                            </td>
-                                                            <td className="text-end">
-                                                                {c.original_price && (
-                                                                    <div className="strikethrough">
-                                                                        {
-                                                                            window
-                                                                                .APP
-                                                                                .currency_symbol
-                                                                        }{" "}
-                                                                        {parseFloat(
-                                                                            c.original_price
-                                                                        ).toFixed(
-                                                                            2
-                                                                        )}
-                                                                    </div>
-                                                                )}
-                                                                <div>
+                                                                <div className="text-muted small">
                                                                     {
                                                                         window
                                                                             .APP
                                                                             .currency_symbol
                                                                     }{" "}
-                                                                    {(
-                                                                        c.price *
-                                                                        c.pivot
-                                                                            .quantity
+                                                                    {parseFloat(
+                                                                        item.price
                                                                     ).toFixed(
                                                                         2
-                                                                    )}
+                                                                    )}{" "}
+                                                                    each
                                                                 </div>
-                                                            </td>
-                                                        </tr>
+                                                            </div>
+                                                        </div>
                                                     ))}
-                                                </tbody>
-                                            </table>
-                                        ) : (
-                                            <div className="text-center text-muted py-5">
-                                                {translations["no_items"] ||
-                                                    "No items in cart"}
-                                            </div>
-                                        )}
-                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="text-center py-5 text-muted">
+                                                    <i className="fas fa-shopping-cart fa-3x mb-3 opacity-25"></i>
+                                                    <p>
+                                                        {translations[
+                                                            "cart_empty"
+                                                        ] ||
+                                                            "Your cart is empty"}
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
 
-                                    {/* Order Discount */}
-                                    {cart.length > 0 && (
-                                        <div className="mb-3 mt-2">
-                                            <div className="row g-2 align-items-center">
-                                                <div className="col-12">
-                                                    <label className="form-label mb-1">
+                                        {/* Order Summary */}
+                                        {cart.length > 0 && (
+                                            <div className="border-top p-3 bg-light">
+                                                <div className="mb-3">
+                                                    <label className="form-label small text-muted mb-1">
                                                         {translations[
                                                             "order_discount"
                                                         ] || "Order Discount"}
                                                     </label>
+                                                    <div className="row g-2">
+                                                        <div className="col-8">
+                                                            <input
+                                                                type="number"
+                                                                min="0"
+                                                                className="form-control"
+                                                                value={discount}
+                                                                onChange={
+                                                                    this
+                                                                        .handleDiscountChange
+                                                                }
+                                                                placeholder={
+                                                                    translations[
+                                                                        "discount_amount"
+                                                                    ] ||
+                                                                    "Amount"
+                                                                }
+                                                            />
+                                                        </div>
+                                                        <div className="col-4">
+                                                            <select
+                                                                className="form-select"
+                                                                value={
+                                                                    discountType
+                                                                }
+                                                                onChange={
+                                                                    this
+                                                                        .handleDiscountTypeChange
+                                                                }
+                                                            >
+                                                                <option value="fixed">
+                                                                    {translations[
+                                                                        "fixed"
+                                                                    ] ||
+                                                                        "Fixed"}
+                                                                </option>
+                                                                <option value="percentage">
+                                                                    %
+                                                                </option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div className="col-8">
-                                                    <input
-                                                        type="number"
-                                                        min="0"
-                                                        className="form-control form-control-sm"
-                                                        value={discount}
+
+                                                <div className="mb-3">
+                                                    <label className="form-label small text-muted mb-1">
+                                                        {translations["note"] ||
+                                                            "Note"}
+                                                    </label>
+                                                    <textarea
+                                                        className="form-control"
+                                                        rows="2"
+                                                        value={note}
                                                         onChange={
                                                             this
-                                                                .handleDiscountChange
+                                                                .handleNoteChange
                                                         }
                                                         placeholder={
                                                             translations[
-                                                                "discount_amount"
+                                                                "add_note"
                                                             ] ||
-                                                            "Discount Amount"
+                                                            "Add order note..."
                                                         }
-                                                    />
+                                                    ></textarea>
                                                 </div>
-                                                <div className="col-4">
+
+                                                <div className="mb-3">
+                                                    <label className="form-label small text-muted mb-1">
+                                                        {translations[
+                                                            "payment_method"
+                                                        ] || "Payment Method"}
+                                                    </label>
                                                     <select
-                                                        className="form-select form-select-sm"
-                                                        value={discountType}
+                                                        className="form-select"
+                                                        value={paymentMethod}
                                                         onChange={
                                                             this
-                                                                .handleDiscountTypeChange
+                                                                .handlePaymentMethodChange
                                                         }
                                                     >
-                                                        <option value="fixed">
+                                                        <option value="cash">
                                                             {translations[
-                                                                "fixed"
-                                                            ] || "Fixed"}
+                                                                "cash"
+                                                            ] || "Cash"}
                                                         </option>
-                                                        <option value="percentage">
-                                                            %
+                                                        <option value="card">
+                                                            {translations[
+                                                                "card"
+                                                            ] || "Card"}
+                                                        </option>
+                                                        <option value="bank_transfer">
+                                                            {translations[
+                                                                "bank_transfer"
+                                                            ] ||
+                                                                "Bank Transfer"}
+                                                        </option>
+                                                        <option value="ewallet">
+                                                            {translations[
+                                                                "ewallet"
+                                                            ] || "E-Wallet"}
                                                         </option>
                                                     </select>
                                                 </div>
-                                            </div>
-                                        </div>
-                                    )}
 
-                                    {/* Order Note */}
-                                    {cart.length > 0 && (
-                                        <div className="mb-3">
-                                            <label className="form-label mb-1">
-                                                {translations["note"] || "Note"}
-                                            </label>
-                                            <textarea
-                                                className="form-control form-control-sm"
-                                                rows="2"
-                                                value={note}
-                                                onChange={this.handleNoteChange}
-                                                placeholder={
-                                                    translations["add_note"] ||
-                                                    "Add note to this order"
-                                                }
-                                            ></textarea>
-                                        </div>
-                                    )}
-
-                                    {/* Payment Method */}
-                                    {cart.length > 0 && (
-                                        <div className="mb-3">
-                                            <label className="form-label mb-1">
-                                                {translations[
-                                                    "payment_method"
-                                                ] || "Payment Method"}
-                                            </label>
-                                            <select
-                                                className="form-select form-select-sm"
-                                                value={paymentMethod}
-                                                onChange={
-                                                    this
-                                                        .handlePaymentMethodChange
-                                                }
-                                            >
-                                                <option value="cash">
-                                                    {translations["cash"] ||
-                                                        "Cash"}
-                                                </option>
-                                                <option value="card">
-                                                    {translations["card"] ||
-                                                        "Card"}
-                                                </option>
-                                                <option value="bank_transfer">
-                                                    {translations[
-                                                        "bank_transfer"
-                                                    ] || "Bank Transfer"}
-                                                </option>
-                                                <option value="ewallet">
-                                                    {translations["ewallet"] ||
-                                                        "E-Wallet"}
-                                                </option>
-                                            </select>
-                                        </div>
-                                    )}
-
-                                    {/* Cash Payment - Change Calculation */}
-                                    {cart.length > 0 &&
-                                        paymentMethod === "cash" && (
-                                            <div className="mb-3">
-                                                <div className="row g-2 align-items-center">
-                                                    <div className="col-6">
-                                                        <label className="form-label mb-1">
-                                                            {translations[
-                                                                "cash_amount"
-                                                            ] || "Cash Amount"}
-                                                        </label>
-                                                        <input
-                                                            type="number"
-                                                            min="0"
-                                                            className="form-control form-control-sm"
-                                                            value={cashAmount}
-                                                            onChange={
-                                                                this
-                                                                    .handleCashAmountChange
-                                                            }
-                                                        />
+                                                {paymentMethod === "cash" && (
+                                                    <div className="mb-3">
+                                                        <div className="row g-2">
+                                                            <div className="col-6">
+                                                                <label className="form-label small text-muted mb-1">
+                                                                    {translations[
+                                                                        "cash_amount"
+                                                                    ] ||
+                                                                        "Cash Amount"}
+                                                                </label>
+                                                                <input
+                                                                    type="number"
+                                                                    min="0"
+                                                                    className="form-control"
+                                                                    value={
+                                                                        cashAmount
+                                                                    }
+                                                                    onChange={
+                                                                        this
+                                                                            .handleCashAmountChange
+                                                                    }
+                                                                />
+                                                            </div>
+                                                            <div className="col-6">
+                                                                <label className="form-label small text-muted mb-1">
+                                                                    {translations[
+                                                                        "change"
+                                                                    ] ||
+                                                                        "Change"}
+                                                                </label>
+                                                                <input
+                                                                    type="text"
+                                                                    className="form-control bg-white"
+                                                                    value={`${
+                                                                        window
+                                                                            .APP
+                                                                            .currency_symbol
+                                                                    } ${changeAmount.toFixed(
+                                                                        2
+                                                                    )}`}
+                                                                    readOnly
+                                                                />
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    <div className="col-6">
-                                                        <label className="form-label mb-1">
+                                                )}
+
+                                                <div className="bg-white rounded p-3 mb-3">
+                                                    <div className="d-flex justify-content-between mb-2">
+                                                        <span className="text-muted">
                                                             {translations[
-                                                                "change"
-                                                            ] || "Change"}
-                                                        </label>
-                                                        <input
-                                                            type="text"
-                                                            className="form-control form-control-sm"
-                                                            value={`${window.APP.currency_symbol} ${changeAmount}`}
-                                                            readOnly
-                                                        />
+                                                                "subtotal"
+                                                            ] || "Subtotal"}
+                                                            :
+                                                        </span>
+                                                        <span>
+                                                            {
+                                                                window.APP
+                                                                    .currency_symbol
+                                                            }{" "}
+                                                            {parseFloat(
+                                                                subtotal
+                                                            ).toFixed(2)}
+                                                        </span>
                                                     </div>
+
+                                                    {discount > 0 && (
+                                                        <div className="d-flex justify-content-between mb-2 text-danger">
+                                                            <span className="text-muted">
+                                                                {translations[
+                                                                    "discount"
+                                                                ] || "Discount"}
+                                                                :
+                                                            </span>
+                                                            <span>
+                                                                -{" "}
+                                                                {
+                                                                    window.APP
+                                                                        .currency_symbol
+                                                                }{" "}
+                                                                {(
+                                                                    subtotal -
+                                                                    total
+                                                                ).toFixed(2)}
+                                                                {discountType ===
+                                                                "percentage"
+                                                                    ? ` (${discount}%)`
+                                                                    : ""}
+                                                            </span>
+                                                        </div>
+                                                    )}
+
+                                                    <div className="d-flex justify-content-between fw-bold fs-5 border-top pt-2">
+                                                        <span>
+                                                            {translations[
+                                                                "total"
+                                                            ] || "Total"}
+                                                            :
+                                                        </span>
+                                                        <span>
+                                                            {
+                                                                window.APP
+                                                                    .currency_symbol
+                                                            }{" "}
+                                                            {parseFloat(
+                                                                total
+                                                            ).toFixed(2)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="d-flex gap-2">
+                                                    <button
+                                                        className="btn btn-outline-danger flex-grow-1"
+                                                        onClick={
+                                                            this.handleCancel
+                                                        }
+                                                        disabled={
+                                                            cart.length === 0
+                                                        }
+                                                    >
+                                                        <i className="fas fa-times me-2 mr-2"></i>
+                                                        {translations[
+                                                            "cancel"
+                                                        ] || "Cancel"}
+                                                    </button>
+                                                    <button
+                                                        className="btn btn-primary flex-grow-1"
+                                                        onClick={
+                                                            this.handleCheckout
+                                                        }
+                                                        disabled={
+                                                            cart.length === 0
+                                                        }
+                                                    >
+                                                        <i className="fas fa-check me-2 mr-2"></i>
+                                                        {translations[
+                                                            "checkout"
+                                                        ] || "Checkout"}
+                                                    </button>
                                                 </div>
                                             </div>
                                         )}
+                                    </div>
+                                </div>
+                            </div>
 
-                                    {/* Total & Buttons */}
-                                    <div className="mt-auto pt-3 border-top">
-                                        <div className="d-flex justify-content-between mb-1">
-                                            <span>
-                                                {translations["subtotal"] ||
-                                                    "Subtotal"}
-                                                :
-                                            </span>
-                                            <span>
-                                                {window.APP.currency_symbol}{" "}
-                                                {this.getSubtotal(cart)}
-                                            </span>
-                                        </div>
-
-                                        {discount > 0 && (
-                                            <div className="d-flex justify-content-between mb-1 text-danger">
-                                                <span>
-                                                    {translations["discount"] ||
-                                                        "Discount"}
-                                                    :
-                                                </span>
-                                                <span>
-                                                    -{" "}
-                                                    {window.APP.currency_symbol}{" "}
-                                                    {(
-                                                        this.getSubtotal(cart) -
-                                                        this.getTotal(cart)
-                                                    ).toFixed(2)}{" "}
-                                                    {discountType ===
-                                                    "percentage"
-                                                        ? `(${discount}%)`
-                                                        : ""}
-                                                </span>
+                            {/* Products Section */}
+                            <div className="col-lg-8">
+                                <div className="card">
+                                    <div className="card-header bg-white border-bottom">
+                                        <div className="d-flex justify-content-between align-items-center">
+                                            <h5 className="mb-0 text-dark">
+                                                <i
+                                                    className="fas fa-boxes me-2 mr-2"
+                                                    style={{
+                                                        color: "var(--primary)",
+                                                    }}
+                                                ></i>
+                                                {translations["products"] ||
+                                                    "Products"}
+                                            </h5>
+                                            <div className="d-flex gap-2">
+                                                <button
+                                                    className="btn btn-hold btn-sm"
+                                                    onClick={this.holdOrder}
+                                                    disabled={cart.length === 0}
+                                                >
+                                                    <i className="fas fa-pause me-1"></i>
+                                                    {translations[
+                                                        "hold_order"
+                                                    ] || "Hold"}
+                                                </button>
+                                                <button
+                                                    className="btn btn-retrieve btn-sm"
+                                                    onClick={
+                                                        this.retrieveHoldOrder
+                                                    }
+                                                >
+                                                    <i className="fas fa-folder-open me-1"></i>
+                                                    {translations[
+                                                        "retrieve_order"
+                                                    ] || "Retrieve"}
+                                                </button>
                                             </div>
-                                        )}
+                                        </div>
+                                    </div>
 
-                                        <div className="d-flex justify-content-between mb-3">
-                                            <strong>
-                                                {translations["total"] ||
-                                                    "Total"}
-                                                :
-                                            </strong>
-                                            <strong>
-                                                {window.APP.currency_symbol}{" "}
-                                                {this.getTotal(cart)}
-                                            </strong>
+                                    <div className="card-body">
+                                        <div className="mb-3">
+                                            <div className="input-group">
+                                                <input
+                                                    type="text"
+                                                    className="form-control"
+                                                    placeholder={`${
+                                                        translations[
+                                                            "search_product"
+                                                        ] || "Search product"
+                                                    }...`}
+                                                    value={search}
+                                                    onChange={
+                                                        this.handleChangeSearch
+                                                    }
+                                                    onKeyDown={this.handleSeach}
+                                                />
+                                                {search ? (
+                                                    <button
+                                                        className="btn btn-outline-secondary"
+                                                        onClick={() => {
+                                                            this.setState({
+                                                                search: "",
+                                                            });
+                                                            this.loadProducts(
+                                                                ""
+                                                            );
+                                                        }}
+                                                    >
+                                                        <i className="fas fa-times"></i>
+                                                    </button>
+                                                ) : (
+                                                    <button className="btn btn-outline-secondary">
+                                                        <i className="fas fa-search"></i>
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
 
-                                        <div className="d-flex justify-content-between gap-2">
-                                            <button
-                                                type="button"
-                                                className="btn btn-danger rounded-pill px-4 shadow-sm w-50"
-                                                onClick={this.handleCancel}
-                                                disabled={cart.length === 0}
-                                            >
-                                                <i
-                                                    className="fas fa-times me-2"
-                                                    style={{
-                                                        marginRight: "8px",
-                                                    }}
-                                                ></i>
-                                                {translations["cancel"] ||
-                                                    "Cancel"}
-                                            </button>
-                                            <button
-                                                type="button"
-                                                className="btn btn-primary rounded-pill px-4 shadow-sm w-50"
-                                                onClick={this.handleCheckout}
-                                                disabled={cart.length === 0}
-                                            >
-                                                <i
-                                                    className="fas fa-shopping-cart me-2"
-                                                    style={{
-                                                        marginRight: "8px",
-                                                    }}
-                                                ></i>
-                                                {translations["checkout"] ||
-                                                    "Checkout"}
-                                            </button>
+                                        <div className="products-grid">
+                                            {products.length > 0 ? (
+                                                products.map((product) => (
+                                                    <div
+                                                        key={product.id}
+                                                        className="product-card"
+                                                        onClick={() =>
+                                                            this.addProductToCart(
+                                                                product.barcode
+                                                            )
+                                                        }
+                                                        onContextMenu={(e) => {
+                                                            e.preventDefault();
+                                                            this.showProductDetails(
+                                                                product
+                                                            );
+                                                        }}
+                                                    >
+                                                        <div className="product-img-container">
+                                                            <img
+                                                                src={
+                                                                    product.image_url ||
+                                                                    "/img/no-image.jpg"
+                                                                }
+                                                                className="product-img"
+                                                                alt={
+                                                                    product.name
+                                                                }
+                                                            />
+                                                            {product.barcode && (
+                                                                <div className="product-barcode">
+                                                                    {
+                                                                        product.barcode
+                                                                    }
+                                                                </div>
+                                                            )}
+                                                            {product.quantity <=
+                                                                window.APP
+                                                                    .warning_quantity && (
+                                                                <span
+                                                                    className={`product-stock-badge badge ${
+                                                                        product.quantity ===
+                                                                        0
+                                                                            ? "bg-danger"
+                                                                            : "bg-warning"
+                                                                    }`}
+                                                                >
+                                                                    {product.quantity ===
+                                                                    0
+                                                                        ? translations[
+                                                                              "out_of_stock"
+                                                                          ] ||
+                                                                          "Out Of Stock"
+                                                                        : translations[
+                                                                              "low_stock"
+                                                                          ] ||
+                                                                          "Low Stock"}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <div className="product-info">
+                                                            <div
+                                                                className="product-name"
+                                                                title={
+                                                                    product.name
+                                                                }
+                                                            >
+                                                                {product.name}
+                                                            </div>
+                                                            <div className="product-details">
+                                                                <span className="product-price">
+                                                                    {
+                                                                        window
+                                                                            .APP
+                                                                            .currency_symbol
+                                                                    }{" "}
+                                                                    {parseFloat(
+                                                                        product.price
+                                                                    ).toFixed(
+                                                                        2
+                                                                    )}
+                                                                </span>
+                                                                <span className="product-stock">
+                                                                    {
+                                                                        product.quantity
+                                                                    }{" "}
+                                                                    {translations[
+                                                                        "stock"
+                                                                    ] ||
+                                                                        "Stock"}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="col-12 text-center py-5 text-muted">
+                                                    <i className="fas fa-box-open fa-3x mb-3 opacity-25"></i>
+                                                    <p>
+                                                        {translations[
+                                                            "no_products"
+                                                        ] ||
+                                                            "No products found"}
+                                                    </p>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
-                        {/* Product List */}
-                        <div className="col-12 col-lg-8">
-                            <div className="mb-3 d-flex gap-2">
-                                <input
-                                    type="text"
-                                    className="form-control rounded-pill shadow-sm px-4"
-                                    placeholder={`${
-                                        translations["search_product"] ||
-                                        "Search product"
-                                    }...`}
-                                    value={search}
-                                    onChange={this.handleChangeSearch}
-                                    onKeyDown={this.handleSeach}
-                                    style={{ flex: 1 }}
-                                />
-                                {search && (
-                                    <button
-                                        className="btn btn-outline-danger rounded-pill shadow-sm px-3 d-flex align-items-center"
-                                        onClick={() => {
-                                            this.setState({ search: "" });
-                                            this.loadProducts("");
-                                        }}
-                                    >
-                                        <i
-                                            className="fas fa-times-circle"
-                                            style={{ marginRight: "5px" }}
-                                        ></i>
-                                        {translations["reset"] || "Reset"}
-                                    </button>
-                                )}
-                            </div>
-
-                            <div className="row g-3">
-                                {products.map((p) => (
-                                    <div
-                                        key={p.id}
-                                        className="col-6 col-md-4 col-xl-3"
-                                    >
-                                        <div
-                                            className="card h-100 shadow-sm cursor-pointer position-relative"
-                                            onClick={() =>
-                                                this.addProductToCart(p.barcode)
-                                            }
-                                            onContextMenu={(e) => {
-                                                e.preventDefault();
-                                                this.showProductDetails(p);
-                                            }}
-                                        >
-                                            {/* Stock Badge */}
-                                            {p.quantity <=
-                                                window.APP.warning_quantity && (
-                                                <div className="position-absolute top-0 end-0 m-2">
-                                                    <span
-                                                        className={`badge ${
-                                                            p.quantity === 0
-                                                                ? "badge-danger"
-                                                                : "badge-warning"
-                                                        }`}
-                                                    >
-                                                        {p.quantity === 0
-                                                            ? translations[
-                                                                  "out_of_stock"
-                                                              ] ||
-                                                              "Out of Stock"
-                                                            : translations[
-                                                                  "low_stock"
-                                                              ] || "Low Stock"}
-                                                    </span>
-                                                </div>
-                                            )}
-
-                                            <img
-                                                src={
-                                                    p.image_url ||
-                                                    "/img/no-image.jpg"
-                                                }
-                                                className="card-img-top"
-                                                alt={p.name}
-                                                style={{
-                                                    objectFit: "cover",
-                                                    height: "150px",
-                                                }}
-                                            />
-                                            <div className="card-body p-2 text-center">
-                                                <h6
-                                                    className={`card-title lh-sm ${
-                                                        window.APP
-                                                            .warning_quantity >
-                                                        p.quantity
-                                                            ? "text-danger"
-                                                            : ""
-                                                    }`}
-                                                >
-                                                    {p.name}
-                                                </h6>
-                                                <div className="d-flex justify-content-between align-items-center mt-2">
-                                                    <small className="text-muted">
-                                                        {translations[
-                                                            "stock"
-                                                        ] || "Stock"}
-                                                        : {p.quantity}
-                                                    </small>
-                                                    <strong className="text-primary">
-                                                        {
-                                                            window.APP
-                                                                .currency_symbol
-                                                        }{" "}
-                                                        {parseFloat(
-                                                            p.price
-                                                        ).toFixed(2)}
-                                                    </strong>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                )}
+                    )}
+                </div>
 
                 {/* Product Details Modal */}
                 {showProductDetails && selectedProduct && (
-                    <div className="modal">
+                    <div className="modal-overlay">
                         <div className="modal-content">
-                            <div className="d-flex justify-content-between align-items-center mb-3">
-                                <h5 className="mb-0">
+                            <div className="modal-header border-bottom">
+                                <h5 className="modal-title">
                                     {translations["product_details"] ||
                                         "Product Details"}
                                 </h5>
                                 <span
                                     className="close-btn"
-                                    onClick={() => this.closeProductDetails()}
+                                    onClick={this.closeProductDetails}
                                 >
                                     &times;
                                 </span>
                             </div>
-
-                            <div className="row">
-                                <div className="col-md-4">
-                                    <img
-                                        src={
-                                            selectedProduct.image_url ||
-                                            "/img/no-image.jpg"
-                                        }
-                                        alt={selectedProduct.name}
-                                        className="img-fluid rounded mb-3"
-                                    />
-                                </div>
-                                <div className="col-md-8">
-                                    <table className="table table-borderless">
-                                        <tbody>
-                                            <tr>
-                                                <th>
-                                                    {translations[
-                                                        "product_name"
-                                                    ] || "Product Name"}
-                                                </th>
-                                                <td>{selectedProduct.name}</td>
-                                            </tr>
-                                            <tr>
-                                                <th>
-                                                    {translations["barcode"] ||
-                                                        "Barcode"}
-                                                </th>
-                                                <td>
-                                                    {selectedProduct.barcode}
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <th>
-                                                    {translations["price"] ||
-                                                        "Price"}
-                                                </th>
-                                                <td>
-                                                    {window.APP.currency_symbol}{" "}
-                                                    {parseFloat(
-                                                        selectedProduct.price
-                                                    ).toFixed(2)}
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <th>
-                                                    {translations["stock"] ||
-                                                        "Stock"}
-                                                </th>
-                                                <td>
-                                                    {selectedProduct.quantity}
-                                                    {selectedProduct.quantity <=
-                                                        window.APP
-                                                            .warning_quantity && (
-                                                        <span
-                                                            className={`badge ms-2 ${
-                                                                selectedProduct.quantity ===
-                                                                0
-                                                                    ? "badge-danger"
-                                                                    : "badge-warning"
-                                                            }`}
-                                                        >
-                                                            {selectedProduct.quantity ===
-                                                            0
-                                                                ? translations[
-                                                                      "out_of_stock"
-                                                                  ] ||
-                                                                  "Out of Stock"
-                                                                : translations[
-                                                                      "low_stock"
-                                                                  ] ||
-                                                                  "Low Stock"}
-                                                        </span>
-                                                    )}
-                                                </td>
-                                            </tr>
-                                            {selectedProduct.category && (
+                            <div className="modal-body">
+                                <div className="row">
+                                    <div className="col-md-5">
+                                        <img
+                                            src={
+                                                selectedProduct.image_url ||
+                                                "/img/no-image.jpg"
+                                            }
+                                            alt={selectedProduct.name}
+                                            className="img-fluid rounded mb-3"
+                                        />
+                                    </div>
+                                    <div className="col-md-7">
+                                        <table className="table table-borderless">
+                                            <tbody>
+                                                <tr>
+                                                    <th width="30%">
+                                                        {translations[
+                                                            "product_name"
+                                                        ] || "Name"}
+                                                    </th>
+                                                    <td>
+                                                        {selectedProduct.name}
+                                                    </td>
+                                                </tr>
                                                 <tr>
                                                     <th>
                                                         {translations[
-                                                            "category"
-                                                        ] || "Category"}
+                                                            "barcode"
+                                                        ] || "Barcode"}
                                                     </th>
                                                     <td>
                                                         {
-                                                            selectedProduct
-                                                                .category.name
+                                                            selectedProduct.barcode
                                                         }
                                                     </td>
                                                 </tr>
-                                            )}
-                                            <tr>
-                                                <th>
-                                                    {translations[
-                                                        "description"
-                                                    ] || "Description"}
-                                                </th>
-                                                <td>
-                                                    {selectedProduct.description ||
-                                                        "-"}
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-
-                                    <div className="d-flex gap-2 mt-3">
-                                        <button
-                                            className="btn btn-primary w-50"
-                                            onClick={() => {
-                                                this.addProductToCart(
-                                                    selectedProduct.barcode
-                                                );
-                                                this.closeProductDetails();
-                                            }}
-                                            disabled={
-                                                selectedProduct.quantity <= 0
-                                            }
-                                        >
-                                            <i className="fas fa-cart-plus me-2"></i>
-                                            {translations["add_to_cart"] ||
-                                                "Add to Cart"}
-                                        </button>
-                                        <button
-                                            className="btn btn-outline-secondary w-50"
-                                            onClick={() =>
-                                                this.closeProductDetails()
-                                            }
-                                        >
-                                            {translations["close"] || "Close"}
-                                        </button>
+                                                <tr>
+                                                    <th>
+                                                        {translations[
+                                                            "price"
+                                                        ] || "Price"}
+                                                    </th>
+                                                    <td>
+                                                        {
+                                                            window.APP
+                                                                .currency_symbol
+                                                        }{" "}
+                                                        {parseFloat(
+                                                            selectedProduct.price
+                                                        ).toFixed(2)}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <th>
+                                                        {translations[
+                                                            "stock"
+                                                        ] || "Stock"}
+                                                    </th>
+                                                    <td>
+                                                        {
+                                                            selectedProduct.quantity
+                                                        }
+                                                        {selectedProduct.quantity <=
+                                                            window.APP
+                                                                .warning_quantity && (
+                                                            <span
+                                                                className={`badge ms-2 ${
+                                                                    selectedProduct.quantity ===
+                                                                    0
+                                                                        ? "bg-danger"
+                                                                        : "bg-warning"
+                                                                }`}
+                                                            >
+                                                                {selectedProduct.quantity ===
+                                                                0
+                                                                    ? translations[
+                                                                          "out_of_stock"
+                                                                      ] ||
+                                                                      "Out of Stock"
+                                                                    : translations[
+                                                                          "low_stock"
+                                                                      ] ||
+                                                                      "Low Stock"}
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                                {selectedProduct.category && (
+                                                    <tr>
+                                                        <th>
+                                                            {translations[
+                                                                "category"
+                                                            ] || "Category"}
+                                                        </th>
+                                                        <td>
+                                                            {
+                                                                selectedProduct
+                                                                    .category
+                                                                    .name
+                                                            }
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                                <tr>
+                                                    <th>
+                                                        {translations[
+                                                            "description"
+                                                        ] || "Description"}
+                                                    </th>
+                                                    <td>
+                                                        {selectedProduct.description ||
+                                                            "-"}
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
+                            </div>
+                            <div className="modal-footer border-top">
+                                <button
+                                    className="btn btn-secondary"
+                                    onClick={this.closeProductDetails}
+                                >
+                                    {translations["close"] || "Close"}
+                                </button>
+                                <button
+                                    className="btn btn-primary"
+                                    onClick={() => {
+                                        this.addProductToCart(
+                                            selectedProduct.barcode
+                                        );
+                                        this.closeProductDetails();
+                                    }}
+                                    disabled={selectedProduct.quantity <= 0}
+                                >
+                                    <i className="fas fa-cart-plus me-2"></i>
+                                    {translations["add_to_cart"] ||
+                                        "Add to Cart"}
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -2040,6 +2575,7 @@ class Cart extends Component {
             </div>
         );
     }
+
 
     viewTransactionDetails(transactionId) {
         axios
@@ -2218,8 +2754,8 @@ class Cart extends Component {
 
 export default Cart;
 
-const root = document.getElementById("cart");
-if (root) {
-    const rootInstance = createRoot(root);
-    rootInstance.render(<Cart />);
+const rootElement = document.getElementById("cart");
+if (rootElement) {
+    const root = createRoot(rootElement);
+    root.render(<Cart />);
 }

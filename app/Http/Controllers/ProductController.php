@@ -76,7 +76,6 @@ class ProductController extends Controller
         return (new FastExcel($formattedProducts))
             ->headerStyle($headerStyle)
             ->download('products.xlsx');
-    
     }
 
 
@@ -122,13 +121,33 @@ class ProductController extends Controller
     /**
      * Display the specified product.
      * This method can be accessed by both admin and user roles.
+     * Fixed to handle both JSON and regular requests properly
      */
-    public function show(Product $product)
+    public function show(Product $product, Request $request)
     {
-        if (request()->wantsJson()) {
-            return new ProductResource($product);
+        // Check if this is an AJAX request for JSON data
+        if ($request->wantsJson() || $request->ajax()) {
+            // Return JSON response with proper image URL
+            $productData = [
+                'id' => $product->id,
+                'name' => $product->name,
+                'description' => $product->description,
+                'barcode' => $product->barcode,
+                'price' => $product->price,
+                'quantity' => $product->quantity,
+                'status' => $product->status,
+                'image_url' => $product->image ? Storage::url($product->image) : null,
+                'created_at' => $product->created_at,
+                'updated_at' => $product->updated_at,
+            ];
+
+            return response()->json([
+                'success' => true,
+                'data' => $productData
+            ]);
         }
 
+        // Regular web view
         return view('products.show')->with('product', $product);
     }
 

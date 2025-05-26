@@ -7,6 +7,7 @@
 @endsection
 
 @section('css')
+<link rel="stylesheet" href="{{ asset('plugins/sweetalert2/sweetalert2.min.css') }}">
 <style>
 /* Modern UI Elements & Card Styling */
 .card {
@@ -38,6 +39,7 @@
     font-weight: 600;
 }
 
+/* Table Styling */
 .table {
     margin-bottom: 0;
 }
@@ -65,6 +67,7 @@
     transform: translateY(-1px);
 }
 
+/* Badge Styling */
 .badge-custom {
     display: inline-block;
     padding: 6px 16px;
@@ -96,6 +99,51 @@
     color: white;
 }
 
+/* Order ID Badge */
+.order-id-badge {
+    background-color: #e8f4fc;
+    color: #3498db;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-weight: 500;
+    font-size: 0.85rem;
+    display: inline-block;
+}
+
+/* Customer Name Badge */
+.customer-name-badge {
+    background-color: #f0f8e8;
+    color: #27ae60;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-weight: 500;
+    font-size: 0.85rem;
+    display: inline-block;
+}
+
+/* Amount Badge */
+.amount-badge {
+    background-color: #f8f4ff;
+    color: #9b59b6;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-weight: 500;
+    font-size: 0.85rem;
+    display: inline-block;
+}
+
+/* Discount Badge */
+.discount-badge {
+    background-color: #fff3cd;
+    color: #f39c12;
+    padding: 3px 8px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Buttons */
 .btn {
     border-radius: 8px;
     padding: 8px 16px;
@@ -148,6 +196,29 @@
     color: white;
 }
 
+.btn-success {
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+    border: none;
+    box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+    box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
+}
+
+.btn-info {
+    background: linear-gradient(135deg, #00bcd4 0%, #0097a7 100%);
+    border: none;
+    color: white;
+    box-shadow: 0 4px 15px rgba(0, 188, 212, 0.3);
+}
+
+.btn-info:hover {
+    background: linear-gradient(135deg, #0097a7 0%, #00838f 100%);
+    box-shadow: 0 6px 20px rgba(0, 188, 212, 0.4);
+}
+
 /* Date Range Picker Styling */
 .date-range-container {
     background-color: white;
@@ -175,6 +246,7 @@
     box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.25);
 }
 
+/* Dashboard Cards */
 .dashboard-card {
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
@@ -219,6 +291,11 @@
     color: white;
 }
 
+.card-total-discount {
+    background-color: #f39c12;
+    color: white;
+}
+
 .animated-bg {
     position: absolute;
     top: 0;
@@ -229,6 +306,36 @@
     z-index: 0;
 }
 
+/* Search Box */
+.search-box {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.search-box input {
+    border-radius: 30px;
+    padding: 12px 20px;
+    padding-left: 45px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.search-box input:focus {
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    border-color: #3498db;
+}
+
+.search-box i {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #999;
+}
+
+/* Modal Styling */
 .modal-content {
     border-radius: 15px;
     border: none;
@@ -251,6 +358,7 @@
     border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 
+/* Invoice Styling */
 .invoice-card {
     border-radius: 12px;
     overflow: hidden;
@@ -340,36 +448,6 @@
     box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
 }
 
-/* Search Box */
-.search-box {
-    position: relative;
-    margin-bottom: 20px;
-}
-
-.search-box input {
-    border-radius: 30px;
-    padding: 12px 20px;
-    padding-left: 45px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s ease;
-    width: 100%;
-}
-
-.search-box input:focus {
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-    border-color: #3498db;
-}
-
-.search-box i {
-    position: absolute;
-    left: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #999;
-}
-
-
 /* Alert styling */
 .alert {
     border-radius: 12px;
@@ -400,6 +478,33 @@
 .close:hover {
     opacity: 1;
 }
+
+/* Order Actions */
+.order-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
 </style>
 @endsection
 
@@ -423,7 +528,7 @@
             </div>
         @endif
     </div>
-    <div class="col-md-6">
+    <div class="col-md-5">
         <div class="search-box">
             <i class="fas fa-search"></i>
             <input type="text" id="orderSearch" class="form-control" placeholder="{{ __('Search Orders...') }}">
@@ -432,7 +537,8 @@
 </div>
 
 <div class="date-range-container">
-    <form action="{{route('orders.index')}}">
+    <form action="{{ route('orders.index') }}" method="GET">
+        @csrf
         <div class="row align-items-center">
             <div class="col-lg-3 col-md-4">
                 <h5 class="mb-0"><i class="fas fa-calendar-alt mr-2"></i> {{ __('Date Range') }}</h5>
@@ -440,24 +546,30 @@
             <div class="col-lg-3 col-md-3">
                 <div class="form-group mb-0">
                     <label for="start_date">{{ __('Start Date') }}</label>
-                    <input type="date" id="start_date" name="start_date" class="form-control" value="{{request('start_date')}}" />
+                    <input type="date" id="start_date" name="start_date" class="form-control" value="{{ request('start_date') }}" />
                 </div>
             </div>
             <div class="col-lg-3 col-md-3">
                 <div class="form-group mb-0">
                     <label for="end_date">{{ __('End Date') }}</label>
-                    <input type="date" id="end_date" name="end_date" class="form-control" value="{{request('end_date')}}" />
+                    <input type="date" id="end_date" name="end_date" class="form-control" value="{{ request('end_date') }}" />
                 </div>
             </div>
             <div class="col-lg-3 col-md-2 text-right">
                 <button class="btn btn-primary" type="submit">
-                    <i class="fas fa-filter mr-1"></i> {{ __('order.submit') }}
+                    <i class="fas fa-filter mr-1"></i> {{ __('Filter') }}
                 </button>
+                @if(request()->has('start_date') || request()->has('end_date'))
+                <a href="{{ route('orders.index') }}" class="btn btn-secondary ml-2">
+                    <i class="fas fa-times mr-1"></i> {{ __('Clear') }}
+                </a>
+                @endif
             </div>
         </div>
     </form>
 </div>
 
+<!-- Stats Cards -->
 <div class="row mb-4">
     <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
         <div class="dashboard-card card-total-orders">
@@ -482,7 +594,7 @@
     </div>
     
     <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
-        <div class="dashboard-card" style="background-color: #f39c12; color: white;">
+        <div class="dashboard-card card-total-discount">
             <div class="animated-bg"></div>
             <div class="card-icon">
                 <i class="fas fa-tag"></i>
@@ -493,6 +605,7 @@
     </div>
 </div>
 
+<!-- Orders List Table -->
 <div class="card shadow-sm border-0">
     <div class="card-header d-flex align-items-center justify-content-between">
         <h3 class="m-0">{{ __('Orders List') }}</h3>
@@ -503,14 +616,14 @@
                 <a href="{{ route('orders.export') }}"  class="btn btn-success">
                     <i class="fas fa-file-excel"></i> {{ __('Export Orders to Excel') }}
                 </a>
-                <a href="{{ route('orders.export-details') }}"  class="btn btn-success">
+                <a href="{{ route('orders.export-details') }}"  class="btn btn-success ml-2">
                     <i class="fas fa-file-excel"></i> {{ __('Export Orders Items to Excel') }}
                 </a>
             </div>
         </div>
     </div>
-    <div class="card-body table-responsive">
-        <table class="table table-hover align-middle">
+    <div class="card-body table-responsive p-0">
+        <table class="table table-hover text-nowrap align-middle">
             <thead>
                 <tr>
                     <th>{{ __('order.ID') }}</th>
@@ -525,28 +638,40 @@
             <tbody>
                 @foreach ($orders as $order)
                 <tr>
-                    <td>{{$order->id}}</td>
-                    <td>{{$order->getCustomerName()}}</td>
-                    <td>{{ config('settings.currency_symbol') }} {{number_format($order->subtotal(), 2)}}</td>
+                    <td>
+                        <div class="order-id-badge">#{{$order->id}}</div>
+                    </td>
+                    <td>
+                        <div class="customer-name-badge">{{$order->getCustomerName()}}</div>
+                    </td>
+                    <td>
+                        <div class="amount-badge">{{ config('settings.currency_symbol') }} {{number_format($order->subtotal(), 2)}}</div>
+                    </td>
                     <td>
                         @if($order->discount > 0)
                             @if($order->discount_type == 'percentage')
-                                <span class="badge-custom" style="background-color: #f39c12;">
+                                <div class="discount-badge">
                                     {{ $order->discount }}% ({{ config('settings.currency_symbol') }} {{number_format($order->discountAmount(), 2)}})
-                                </span>
+                                </div>
                             @else
-                                <span class="badge-custom" style="background-color: #f39c12;">
+                                <div class="discount-badge">
                                     {{ config('settings.currency_symbol') }} {{number_format($order->discount, 2)}}
-                                </span>
+                                </div>
                             @endif
                         @else
-                            {{ config('settings.currency_symbol') }} 0.00
+                            <div class="discount-badge">{{ config('settings.currency_symbol') }} 0.00</div>
                         @endif
                     </td>
-                    <td>{{ config('settings.currency_symbol') }} {{$order->formattedTotal()}}</td>
-                    <td>{{$order->created_at->format('Y-m-d H:i')}}</td>
+                    <td>
+                        <div class="amount-badge">{{ config('settings.currency_symbol') }} {{$order->formattedTotal()}}</div>
+                    </td>
+                    <td>
+                        <span title="{{$order->created_at}}">
+                            {{ \Carbon\Carbon::parse($order->created_at)->format('M d, Y H:i') }}
+                        </span>
+                    </td>
                     <td class="text-center">
-                        <div class="btn-group">
+                        <div class="order-actions">
                             <button
                                 class="btn btn-sm btn-info btnShowInvoice"
                                 data-toggle="modal"

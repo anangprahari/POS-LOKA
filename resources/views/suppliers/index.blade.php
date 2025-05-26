@@ -37,6 +37,11 @@
     font-weight: 600;
 }
 
+.card-text {
+    margin-top: 5px;
+    text-align: center;
+}
+
 /* Table Styling */
 .table {
     margin-bottom: 0;
@@ -63,6 +68,20 @@
 .table-hover tbody tr:hover {
     background-color: rgba(52, 152, 219, 0.05);
     transform: translateY(-1px);
+}
+
+/* Supplier Avatar */
+.supplier-avatar {
+    width: 65px;
+    height: 65px;
+    object-fit: cover;
+    border-radius: 50%;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.supplier-avatar:hover {
+    transform: scale(1.1);
 }
 
 /* Buttons */
@@ -293,6 +312,44 @@
     z-index: 0;
 }
 
+/* Supplier Detail Styles */
+.supplier-info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.supplier-info-row:last-child {
+    border-bottom: none;
+}
+
+.supplier-details {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+}
+
+/* Modal Styles */
+.modal-content {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    padding: 15px 20px;
+}
+
+.modal-footer {
+    border-top: 1px solid rgba(0,0,0,0.05);
+}
+
 /* Name Badge */
 .name-badge {
     background-color: #e8f4fc;
@@ -335,7 +392,7 @@
     margin-right: 5px;
 }
 
-/* Supplier Actions */
+/* Supplier Quick Actions */
 .supplier-actions {
     display: flex;
     gap: 8px;
@@ -352,70 +409,9 @@
     background: linear-gradient(135deg, #0097a7 0%, #00838f 100%);
     box-shadow: 0 6px 20px rgba(0, 188, 212, 0.4);
 }
-
-/* Supplier Quick Actions */
-.supplier-actions {
-    display: flex;
-    gap: 8px;
-}
-/* Supplier Photo Styling */
-.supplier-photo-container {
-    position: relative;
-    width: 120px;
-    height: 120px;
-    margin: 0 auto;
-    border-radius: 50%;
-    overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    background-color: #f8f9fa;
-}
-
-.supplier-photo {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border: 3px solid white;
-    transition: transform 0.3s ease;
-}
-
-.supplier-photo:hover {
-    transform: scale(1.05);
-}
-
-.supplier-photo-placeholder {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #e9ecef;
-    color: #6c757d;
-    font-size: 2.5rem;
-}
-
-/* Customer info row styling */
-.customer-info-row {
-    padding: 10px 0;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.customer-info-row:last-child {
-    border-bottom: none;
-}
-
-.customer-info-row strong {
-    color: #555;
-}
-
-.customer-info-row i {
-    margin-right: 8px;
-    color: #3498db;
-}
 </style>
 @endsection
+
 @section('content')
 <div class="row mb-4">
     <div class="col-md-6">
@@ -475,8 +471,10 @@
                 <i class="fas fa-star"></i>
             </div>
             <div class="card-value">5</div>
-            <div class="card-title">{{ __('Top Suppliers') }}</div>
-            <div class="card-description small text-white-50">{{ __('Based on delivery performance') }}</div>
+            <div class="card-text">
+                <div class="card-title">{{ __('Top Suppliers') }}</div>
+                <div class="card-description small text-white-50">{{ __('Based on delivery performance') }}</div>
+            </div>
         </div>
     </div>
 </div>
@@ -485,6 +483,7 @@
 <div class="card supplier-list shadow-sm border-0">
     <div class="card-header d-flex align-items-center justify-content-between">
         <h3 class="m-0">{{ __('Suppliers List') }}</h3>
+        
         <div class="d-flex flex-grow-1 justify-content-between align-items-center ml-3">
             <div class="flex-grow-1 text-center">
                 <a href="{{ route('suppliers.create') }}" class="btn btn-orange">
@@ -505,6 +504,7 @@
             <thead>
                 <tr>
                     <th>{{ __('ID') }}</th>
+                    <th>{{ __('Avatar') }}</th>
                     <th>{{ __('Name') }}</th>
                     <th>{{ __('Email') }}</th>
                     <th>{{ __('Phone') }}</th>
@@ -516,27 +516,30 @@
             <tbody>
                 @foreach ($suppliers as $supplier)
                 <tr>
-                    <td>{{$supplier->id}}</td>
+                    <td>{{ $supplier->id }}</td>
                     <td>
-                        <div class="name-badge">{{$supplier->first_name}} {{$supplier->last_name}}</div>
+                        <img class="supplier-avatar" src="{{ $supplier->getAvatarUrl() }}" alt="Supplier Avatar">
+                    </td>
+                    <td>
+                        <div class="name-badge">{{ $supplier->first_name }} {{ $supplier->last_name }}</div>
                     </td>
                     <td>
                         <div class="email-badge">
-                            <i class="fas fa-envelope"></i> {{$supplier->email}}
+                            <i class="fas fa-envelope"></i> {{ $supplier->email }}
                         </div>
                     </td>
                     <td>
                         <div class="phone-badge">
-                            <i class="fas fa-phone-alt"></i> {{$supplier->phone}}
+                            <i class="fas fa-phone-alt"></i> {{ $supplier->phone }}
                         </div>
                     </td>
                     <td>
-                        <div class="text-truncate" style="max-width: 200px;" title="{{$supplier->address}}">
-                            {{$supplier->address}}
+                        <div class="text-truncate" style="max-width: 200px;" title="{{ $supplier->address }}">
+                            {{ $supplier->address }}
                         </div>
                     </td>
                     <td>
-                        <span title="{{$supplier->created_at}}">
+                        <span title="{{ $supplier->created_at }}">
                             {{ \Carbon\Carbon::parse($supplier->created_at)->format('M d, Y') }}
                         </span>
                     </td>
@@ -545,10 +548,10 @@
                             <a href="{{ route('suppliers.edit', $supplier) }}" class="btn btn-sm btn-primary">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <button class="btn btn-sm btn-danger btn-delete" data-url="{{route('suppliers.destroy', $supplier)}}">
+                            <button class="btn btn-sm btn-danger btn-delete" data-url="{{ route('suppliers.destroy', $supplier) }}">
                                 <i class="fas fa-trash"></i>
                             </button>
-                            <a href="#" class="btn btn-sm btn-view btn-supplier-detail" data-id="{{$supplier->id}}">
+                            <a href="#" class="btn btn-sm btn-view btn-supplier-detail" data-id="{{ $supplier->id }}">
                                 <i class="fas fa-eye"></i>
                             </a>
                         </div>
@@ -583,26 +586,23 @@
                 </div>
                 <div id="supplierDetailContent" style="display: none;">
                     <div class="text-center mb-4">
-                        <!-- Supplier Photo Display -->
-                        <div class="supplier-photo-container mb-3">
-                            <img id="modal-supplier-photo" src="" alt="Supplier Photo" class="img-thumbnail rounded-circle supplier-photo">
-                        </div>
+                        <img id="modal-supplier-avatar" class="supplier-avatar" style="width: 100px; height: 100px;" src="" alt="Supplier Avatar">
                         <h4 id="modal-supplier-name" class="mt-3"></h4>
                     </div>
-                    <div class="customer-details">
-                        <div class="customer-info-row">
+                    <div class="supplier-details">
+                        <div class="supplier-info-row">
                             <strong><i class="fas fa-envelope"></i> {{ __('Email') }}:</strong>
                             <span id="modal-supplier-email"></span>
                         </div>
-                        <div class="customer-info-row">
+                        <div class="supplier-info-row">
                             <strong><i class="fas fa-phone-alt"></i> {{ __('Phone') }}:</strong>
                             <span id="modal-supplier-phone"></span>
                         </div>
-                        <div class="customer-info-row">
+                        <div class="supplier-info-row">
                             <strong><i class="fas fa-map-marker-alt"></i> {{ __('Address') }}:</strong>
                             <span id="modal-supplier-address"></span>
                         </div>
-                        <div class="customer-info-row">
+                        <div class="supplier-info-row">
                             <strong><i class="fas fa-calendar-alt"></i> {{ __('Created At') }}:</strong>
                             <span id="modal-supplier-created"></span>
                         </div>
@@ -627,159 +627,119 @@
 <script src="{{ asset('plugins/sweetalert2/sweetalert2.min.js') }}"></script>
 <script type="module">
     $(document).ready(function() {
-    // Animate dashboard cards on page load
-    setTimeout(function() {
-        $('.dashboard-card').each(function(index) {
-            setTimeout(() => {
-                $(this).css({
-                    'opacity': 1,
-                    'transform': 'translateY(0)'
-                });
-            }, index * 100);
-        });
-    }, 300);
-    
-    // Initialize search functionality
-    $("#supplierSearch").on("keyup", function() {
-        var value = $(this).val().toLowerCase();
-        $("table tbody tr").filter(function() {
-            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
-        });
-    });
-    
-    // Filter buttons functionality
-    $(".filter-button").click(function() {
-        $(".filter-button").removeClass("active");
-        $(this).addClass("active");
-        
-        var filter = $(this).text().trim().toLowerCase();
-        if(filter === '{{ strtolower(__("All")) }}') {
-            $("table tbody tr").show();
-        } else if(filter === '{{ strtolower(__("Active")) }}') {
-            $("table tbody tr").hide();
-            // In a real app, you would filter based on an active field
-            $("table tbody tr").slice(0, Math.ceil($("table tbody tr").length * 0.7)).show();
-        } else if(filter === '{{ strtolower(__("New")) }}') {
-            $("table tbody tr").hide();
-            // In a real app, you would filter based on creation date
-            $("table tbody tr").slice(0, Math.ceil($("table tbody tr").length * 0.3)).show();
-        }
-    });
-    
-    // Delete supplier functionality
-    $(document).on('click', '.btn-delete', function() {
-        var $this = $(this);
-        const swalWithBootstrapButtons = Swal.mixin({
-            customClass: {
-                confirmButton: 'btn btn-success',
-                cancelButton: 'btn btn-danger'
-            },
-            buttonsStyling: false
-        });
-
-        swalWithBootstrapButtons.fire({
-            title: '{{ __("Are you sure?") }}',
-            text: '{{ __("You won\'t be able to revert this!") }}',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: '{{ __("Yes, delete it!") }}',
-            cancelButtonText: '{{ __("No, cancel!") }}',
-            reverseButtons: true
-        }).then((result) => {
-            if (result.value) {
-                $.post($this.data('url'), {
-                    _method: 'DELETE',
-                    _token: '{{ csrf_token() }}'
-                }, function(res) {
-                    $this.closest('tr').fadeOut(500, function() {
-                        $(this).remove();
-                        
-                        // Update card counts after deletion
-                        let totalCount = parseInt($('.card-total .card-value').text()) - 1;
-                        $('.card-total .card-value').text(totalCount);
-                        
-                        // Update the other counts as appropriate
-                        let activeCount = parseInt($('.card-active .card-value').text()) - 1;
-                        $('.card-active .card-value').text(activeCount);
+        // Animate dashboard cards on page load
+        setTimeout(function() {
+            $('.dashboard-card').each(function(index) {
+                setTimeout(() => {
+                    $(this).css({
+                        'opacity': 1,
+                        'transform': 'translateY(0)'
                     });
-                });
+                }, index * 100);
+            });
+        }, 300);
+        
+        // Initialize search functionality
+        $("#supplierSearch").on("keyup", function() {
+            var value = $(this).val().toLowerCase();
+            $("table tbody tr").filter(function() {
+                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+            });
+        });
+        
+        // Filter buttons functionality
+        $(".filter-button").click(function() {
+            $(".filter-button").removeClass("active");
+            $(this).addClass("active");
+            
+            var filter = $(this).text().trim().toLowerCase();
+            if(filter === '{{ strtolower(__("All")) }}') {
+                $("table tbody tr").show();
+            } else if(filter === '{{ strtolower(__("Active")) }}') {
+                $("table tbody tr").hide();
+                // This is simplified - in real app would need to check based on status
+                $("table tbody tr").slice(0, Math.ceil($("table tbody tr").length * 0.7)).show();
+            } else if(filter === '{{ strtolower(__("New")) }}') {
+                $("table tbody tr").hide();
+                // This is simplified - in real app would check based on date
+                $("table tbody tr").slice(0, Math.ceil($("table tbody tr").length * 0.3)).show();
             }
         });
-    });
-    
-  // Supplier detail view functionality - COMPLETE FIX
-$(document).on('click', '.btn-supplier-detail', function(e) {
-    e.preventDefault();
-    
-    // Get the supplier ID
-    var supplierId = $(this).data('id');
-    
-    // Show modal and loading spinner
-    $('#supplierDetailModal').modal('show');
-    $('#supplierDetailContent').hide();
-    $('.spinner-border').show();
-    
-    // Make an AJAX request to get full supplier details including photo
-    $.ajax({
-        url: "{{ route('suppliers.show', ':id') }}".replace(':id', supplierId),
-        type: 'GET',
-        dataType: 'json',
-        success: function(response) {
-            // Hide spinner and show content
-            $('.spinner-border').hide();
-            $('#supplierDetailContent').show();
-            
-            // Populate modal with supplier data from AJAX response
-            $('#modal-supplier-name').text(response.first_name + ' ' + response.last_name);
-            $('#modal-supplier-email').text(response.email);
-            $('#modal-supplier-phone').text(response.phone);
-            $('#modal-supplier-address').text(response.address);
-            $('#modal-supplier-created').text(moment(response.created_at).format('MMM DD, YYYY'));
-            
-            // Set edit link with correct URL
-            $('#modal-supplier-edit').attr('href', "{{ route('suppliers.edit', ':id') }}".replace(':id', supplierId));
-            
-            // Handle supplier photo properly - FIXED
-            if (response.avatar) {
-                // The avatar field contains "suppliers/filename.jpg"
-                // So we just need to prepend the storage path
-                $('#modal-supplier-photo').attr('src', "{{ asset('storage') }}/" + response.avatar);
-                
-                // Debug info - log the image URL to console for verification
-                console.log("Image URL:", "{{ asset('storage') }}/" + response.avatar);
-            } else {
-                // Default placeholder if no photo field found
-                $('#modal-supplier-photo').attr('src', "{{ asset('img/default-supplier.png') }}");
-            }
-        },
-        error: function(xhr, status, error) {
-            console.error('Error fetching supplier details:', error);
-            
-            // Hide spinner and show content
-            $('.spinner-border').hide();
-            $('#supplierDetailContent').show();
-            
-            // Get the row data as fallback
-            var $row = $('tr').filter(function() {
-                return $(this).find('td:first').text().trim() == supplierId;
+        
+        // Delete supplier functionality
+        $(document).on('click', '.btn-delete', function() {
+            var $this = $(this);
+            const swalWithBootstrapButtons = Swal.mixin({
+                customClass: {
+                    confirmButton: 'btn btn-success',
+                    cancelButton: 'btn btn-danger'
+                },
+                buttonsStyling: false
             });
-            
-            // Populate the modal with supplier data from the row
-            $('#modal-supplier-name').text($row.find('.name-badge').text().trim());
-            $('#modal-supplier-email').text($row.find('.email-badge').text().replace(/\s+/g, ' ').trim());
-            $('#modal-supplier-phone').text($row.find('.phone-badge').text().replace(/\s+/g, ' ').trim());
-            $('#modal-supplier-address').text($row.find('[title]').attr('title'));
-            $('#modal-supplier-created').text($row.find('td:eq(5) span').text().trim());
-            
-            // Set default placeholder image for photo
-            $('#modal-supplier-photo').attr('src', "{{ asset('img/default-supplier.png') }}");
-            
-            // Set edit link with correct URL
-            $('#modal-supplier-edit').attr('href', "{{ route('suppliers.edit', ':id') }}".replace(':id', supplierId));
-        }
-    });
-});
 
-});
+            swalWithBootstrapButtons.fire({
+                title: '{{ __("Are you sure?") }}',
+                text: '{{ __("You won\'t be able to revert this!") }}',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '{{ __("Yes, delete it!") }}',
+                cancelButtonText: '{{ __("No, cancel!") }}',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.value) {
+                    $.post($this.data('url'), {
+                        _method: 'DELETE',
+                        _token: '{{ csrf_token() }}'
+                    }, function(res) {
+                        $this.closest('tr').fadeOut(500, function() {
+                            $(this).remove();
+                            
+                            // Update card counts after deletion
+                            let totalCount = parseInt($('.card-total .card-value').text()) - 1;
+                            $('.card-total .card-value').text(totalCount);
+                            
+                            // Update other counts as appropriate
+                            let activeCount = parseInt($('.card-active .card-value').text()) - 1;
+                            $('.card-active .card-value').text(activeCount);
+                        });
+                    });
+                }
+            });
+        });
+        
+        // Supplier detail view functionality
+        $(document).on('click', '.btn-supplier-detail', function(e) {
+            e.preventDefault();
+            
+            // Get the supplier ID
+            var supplierId = $(this).data('id');
+            
+            // In a real app, you would fetch this from an API endpoint
+            // This is simulated here based on the row data
+            var $row = $(this).closest('tr');
+            
+            // Show modal and loading spinner
+            $('#supplierDetailModal').modal('show');
+            $('#supplierDetailContent').hide();
+            $('.spinner-border').show();
+            
+            // Simulate AJAX loading
+            setTimeout(function() {
+                $('.spinner-border').hide();
+                $('#supplierDetailContent').show();
+                
+                // Populate the modal with supplier data from the row
+                $('#modal-supplier-avatar').attr('src', $row.find('.supplier-avatar').attr('src'));
+                $('#modal-supplier-name').text($row.find('.name-badge').text());
+                $('#modal-supplier-email').text($row.find('.email-badge').text().trim());
+                $('#modal-supplier-phone').text($row.find('.phone-badge').text().trim());
+                $('#modal-supplier-address').text($row.find('[title]').attr('title'));
+                $('#modal-supplier-created').text($row.find('td:eq(6)').text().trim());
+                
+                // Set edit link
+                $('#modal-supplier-edit').attr('href', $row.find('a[href*="edit"]').attr('href'));
+            }, 500);
+        });
+    });
 </script>
 @endsection

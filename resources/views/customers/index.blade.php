@@ -329,6 +329,7 @@
     margin-bottom: 15px;
 }
 
+
 /* Modal Styles */
 .modal-content {
     border: none;
@@ -667,45 +668,63 @@
             }
         });
         
-        // Delete customer functionality
-        $(document).on('click', '.btn-delete', function() {
-            var $this = $(this);
-            const swalWithBootstrapButtons = Swal.mixin({
-                customClass: {
-                    confirmButton: 'btn btn-success',
-                    cancelButton: 'btn btn-danger'
-                },
-                buttonsStyling: false
-            });
+      // Delete customer functionality
+$(document).on('click', '.btn-delete', function() {
+    var $this = $(this);
+    const swalWithBootstrapButtons = Swal.mixin({
+        customClass: {
+            confirmButton: 'btn btn-danger ml-2',
+            cancelButton: 'btn btn-secondary'
+        },
+        buttonsStyling: false
+    });
 
-            swalWithBootstrapButtons.fire({
-                title: '{{ __('customer.sure ') }}',
-                text: '{{ __('customer.really_delete ') }}',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: '{{ __('customer.yes_delete ') }}',
-                cancelButtonText: '{{ __('customer.No ') }}',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.value) {
-                    $.post($this.data('url'), {
-                        _method: 'DELETE',
-                        _token: '{{ csrf_token() }}'
-                    }, function(res) {
-                        $this.closest('tr').fadeOut(500, function() {
-                            $(this).remove();
-                            
-                            // Update card counts after deletion
-                            let totalCount = parseInt($('.card-total .card-value').text()) - 1;
-                            $('.card-total .card-value').text(totalCount);
-                            
-                            // Update other counts as appropriate
-                            // This is simplified - in a real app would check dates, etc.
-                        });
+    swalWithBootstrapButtons.fire({
+        title: '{{ __("Confirm Deletion") }}',
+        text: '{{ __("Are you sure you want to permanently delete this customer? This action cannot be undone.") }}',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: '<i class="fas fa-trash mr-1"></i> {{ __("Delete") }}',
+        cancelButtonText: '<i class="fas fa-times mr-1"></i> {{ __("Cancel") }}',
+        reverseButtons: true,
+        backdrop: `
+            rgba(0,0,0,0.4)
+            url("{{ asset('images/trash-icon-animated.gif') }}")
+            left top
+            no-repeat
+        `
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.post($this.data('url'), {
+                _method: 'DELETE',
+                _token: '{{ csrf_token() }}'
+            }, function(res) {
+                $this.closest('tr').fadeOut(500, function() {
+                    $(this).remove();
+                    
+                    // Show success message
+                    Swal.fire({
+                        title: '{{ __("Deleted!") }}',
+                        text: '{{ __("The customer has been successfully deleted.") }}',
+                        icon: 'success',
+                        timer: 2000,
+                        showConfirmButton: false
                     });
-                }
+                    
+                    // Update card counts after deletion
+                    let totalCount = parseInt($('.card-total .card-value').text()) - 1;
+                    $('.card-total .card-value').text(totalCount);
+                });
+            }).fail(function() {
+                Swal.fire(
+                    '{{ __("Error") }}',
+                    '{{ __("There was a problem deleting the customer. Please try again.") }}',
+                    'error'
+                );
             });
-        });
+        }
+    });
+});
         
         // Customer detail view functionality
         $(document).on('click', '.btn-customer-detail', function(e) {

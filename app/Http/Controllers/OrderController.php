@@ -14,51 +14,46 @@ class OrderController extends Controller
 {
     public function index(Request $request)
     {
-        // Create query builder instance without pagination
-        $ordersQuery = new Order();
+        // Gunakan query builder
+        $ordersQuery = Order::query();
 
         // Apply date filters if provided
         if ($request->start_date) {
-            $ordersQuery = $ordersQuery->where('created_at', '>=', $request->start_date);
+            $ordersQuery->where('created_at', '>=', $request->start_date);
         }
         if ($request->end_date) {
-            $ordersQuery = $ordersQuery->where('created_at', '<=', $request->end_date . ' 23:59:59');
+            $ordersQuery->where('created_at', '<=', $request->end_date . ' 23:59:59');
         }
 
-        // First calculate totals from all matching orders (without pagination)
         $allOrders = clone $ordersQuery;
 
-        // Get total counts for the dashboard
+        // Gunakan untuk menghitung total orders
         $totalOrders = $allOrders->count();
 
-        // Use DB aggregate queries for better performance on large datasets
-        $totals = $allOrders->selectRaw('
+        // Gunakan query terpisah untuk kalkulasi discount
+        $totals = (clone $ordersQuery)->selectRaw('
             COUNT(*) as total_count,
             SUM(CASE WHEN discount_type = "percentage" THEN 
                 (SELECT SUM(items.price) FROM order_items as items WHERE items.order_id = orders.id) * discount / 100
                 ELSE discount END) as total_discount
         ')->first();
 
-        // Calculate total for all orders using relationships and raw queries
-        $orderIds = $allOrders->pluck('id')->toArray();
+        // Gunakan query standar (tanpa selectRaw) untuk pluck ID
+        $orderIds = (clone $ordersQuery)->pluck('id')->toArray();
 
-        // Get subtotal using order items
+
         $subtotalSum = DB::table('order_items')
             ->whereIn('order_id', $orderIds)
             ->sum('price');
 
-        // Get total discount amount
         $discountSum = $totals->total_discount ?? 0;
 
-        // Calculate total amount (subtotal - discount)
         $total = $subtotalSum - $discountSum;
 
-        // Get received amount
         $receivedAmount = DB::table('payments')
             ->whereIn('order_id', $orderIds)
             ->sum('amount');
 
-        // Now get the paginated orders for displaying in the table
         $orders = $ordersQuery->with(['items.product', 'payments', 'customer'])->latest()->paginate(10);
 
         return view('orders.index', compact(
@@ -70,6 +65,7 @@ class OrderController extends Controller
             'totalOrders'
         ));
     }
+
 
     /**
      * Export orders to Excel file with elegant modern styling

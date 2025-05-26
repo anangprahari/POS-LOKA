@@ -1,244 +1,11 @@
 @extends('layouts.admin')
 
 @section('title', __('User Management'))
-
-@section('content-header')
-    <div class="container-fluid">
-        <div class="row mb-2">
-            <div class="col-sm-6">
-                <h1>{{ __('User Management') }}</h1>
-            </div>
-        </div>
-    </div>
+@section('content-header', __('User Management'))
+@section('content-actions')
 @endsection
-
-@section('content')
-<div class="container-fluid">
-    <!-- Search and Filter Section -->
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="search-box">
-                <i class="fas fa-search"></i>
-                <input type="text" id="userSearch" class="form-control" placeholder="{{ __('Search Users') }}">
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="filter-buttons text-md-right">
-                <button class="filter-button active">{{ __('All') }}</button>
-                <button class="filter-button">{{ __('Admin') }}</button>
-                <button class="filter-button">{{ __('User') }}</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Stats Cards -->
-    <div class="row mb-4">
-        <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
-            <div class="dashboard-card card-total">
-                <div class="animated-bg"></div>
-                <div class="card-icon">
-                    <i class="fas fa-users"></i>
-                </div>
-                <div class="card-value">{{ $users->total() }}</div>
-                <div class="card-title">{{ __('Total Users') }}</div>
-            </div>
-        </div>
-        
-        <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
-            <div class="dashboard-card card-new">
-                <div class="animated-bg"></div>
-                <div class="card-icon">
-                    <i class="fas fa-user-plus"></i>
-                </div>
-                <div class="card-value">{{ $users->where('created_at', '>=', now()->subDays(30))->count() }}</div>
-                <div class="card-title">{{ __('New Users (30 days)') }}</div>
-            </div>
-        </div>
-        
-        <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
-            <div class="dashboard-card card-returning">
-                <div class="animated-bg"></div>
-                <div class="card-icon">
-                    <i class="fas fa-user-shield"></i>
-                </div>
-                <div class="card-value">{{ $users->where('role', 'admin')->count() }}</div>
-                <div class="card-title">{{ __('Admin Users') }}</div>
-            </div>
-        </div>
-        
-        <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
-            <div class="dashboard-card card-vip">
-                <div class="animated-bg"></div>
-                <div class="card-icon">
-                    <i class="fas fa-user-tag"></i>
-                </div>
-                <div class="card-value">{{ $users->where('role', 'user')->count() }}</div>
-                <div class="card-title">{{ __('Standard Users') }}</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Users List Table -->
-    <div class="card shadow-sm border-0">
-        <div class="card-header d-flex align-items-center justify-content-between">
-            <h3 class="m-0">{{ __('Users List') }}</h3>
-            
-            <div class="d-flex flex-grow-1 justify-content-between align-items-center ml-3">
-                <div class="flex-grow-1 text-center">
-                    <a href="{{ route('users.create') }}" class="btn btn-orange">
-                        <i class="fas fa-plus-circle mr-1"></i>
-                        {{ __('Add New Users') }}
-                    </a>
-                </div>
-                <div class="text-right">
-                    <a href="{{ route('users.export') }}" class="btn btn-success">
-                        <i class="fas fa-file-excel"></i> {{ __('Export to Excel') }}
-                    </a>
-                </div>
-            </div>
-        </div>
-        
-        <div class="card-body table-responsive p-0">
-            @if ($message = Session::get('success'))
-                <div class="alert alert-success alert-dismissible fade show m-3" role="alert">
-                    {{ $message }}
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-            @endif
-            @if ($message = Session::get('error'))
-                <div class="alert alert-danger alert-dismissible fade show m-3" role="alert">
-                    {{ $message }}
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-            @endif
-
-            <table id="users-table" class="table table-hover text-nowrap align-middle">
-                <thead>
-                    <tr>
-                        <th>{{ __('ID') }}</th>
-                        <th>{{ __('Avatar') }}</th>
-                        <th>{{ __('Name') }}</th>
-                        <th>{{ __('Email') }}</th>
-                        <th>{{ __('Role') }}</th>
-                        <th>{{ __('Created At') }}</th>
-                        <th>{{ __('Actions') }}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($users as $user)
-                        <tr>
-                            <td>{{ $user->id }}</td>
-                            <td>
-                                <div class="user-avatar">
-                                    <img src="https://ui-avatars.com/api/?name={{ urlencode($user->first_name . ' ' . $user->last_name) }}&background=random&color=fff" alt="User Avatar">
-                                </div>
-                            </td>
-                            <td>
-                                <div class="name-badge">{{ $user->first_name }} {{ $user->last_name }}</div>
-                            </td>
-                            <td>
-                                <div class="email-badge">
-                                    <i class="fas fa-envelope"></i> {{ $user->email }}
-                                </div>
-                            </td>
-                            <td>
-                                <span class="role-badge {{ $user->role === 'admin' ? 'role-admin' : 'role-user' }}">
-                                    {{ ucfirst($user->role) }}
-                                </span>
-                            </td>
-                            <td>
-                                <span title="{{ $user->created_at }}">
-                                    {{ $user->created_at->format('d/m/Y H:i') }}
-                                </span>
-                            </td>
-                            <td>
-                                <div class="user-actions">
-                                    <a href="{{ route('users.edit', $user->id) }}" class="btn btn-sm btn-primary">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    @if(auth()->id() !== $user->id)
-                                        <button type="button" class="btn btn-sm btn-danger btn-delete" data-id="{{ $user->id }}">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    @endif
-                                    <button class="btn btn-sm btn-view btn-user-detail" data-id="{{ $user->id }}" 
-                                            data-name="{{ $user->first_name }} {{ $user->last_name }}"
-                                            data-email="{{ $user->email }}"
-                                            data-role="{{ ucfirst($user->role) }}"
-                                            data-created="{{ $user->created_at->format('d/m/Y H:i') }}">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                </div>
-                                
-                                <!-- Hidden delete form -->
-                                @if(auth()->id() !== $user->id)
-                                    <form id="delete-form-{{ $user->id }}" action="{{ route('users.destroy', $user->id) }}" method="POST" class="d-none">
-                                        @csrf
-                                        @method('DELETE')
-                                    </form>
-                                @endif
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-        <div class="card-footer">
-            <div class="d-flex justify-content-center">
-                {{ $users->links() }}
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- User Detail Modal -->
-<div class="modal fade" id="userDetailModal" tabindex="-1" role="dialog" aria-labelledby="userDetailModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="userDetailModalLabel">{{ __('User Detail') }}</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="text-center mb-4">
-                    <img id="modal-user-avatar" class="user-avatar-lg" src="" alt="User Avatar">
-                    <h4 id="modal-user-name" class="mt-3"></h4>
-                </div>
-                <div class="user-details">
-                    <div class="user-info-row">
-                        <strong><i class="fas fa-envelope"></i> {{ __('Email') }}:</strong>
-                        <span id="modal-user-email"></span>
-                    </div>
-                    <div class="user-info-row">
-                        <strong><i class="fas fa-user-tag"></i> {{ __('Role') }}:</strong>
-                        <span id="modal-user-role"></span>
-                    </div>
-                    <div class="user-info-row">
-                        <strong><i class="fas fa-calendar-alt"></i> {{ __('Created At') }}:</strong>
-                        <span id="modal-user-created"></span>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <a id="modal-user-edit" href="#" class="btn btn-primary">
-                    <i class="fas fa-edit"></i> {{ __('Edit') }}
-                </a>
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                    <i class="fas fa-times"></i> {{ __('Close') }}
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-@endsection
-
 @section('css')
+<link rel="stylesheet" href="{{ asset('plugins/sweetalert2/sweetalert2.min.css') }}">
 <style>
 /* Modern UI Elements & Card Styling */
 .card {
@@ -268,6 +35,10 @@
     margin: 0;
     font-size: 18px;
     font-weight: 600;
+}
+.card-text {
+    margin-top: 5px;
+    text-align: center;
 }
 
 /* Table Styling */
@@ -300,30 +71,16 @@
 
 /* User Avatar */
 .user-avatar {
-    width: 45px;
-    height: 45px;
-    overflow: hidden;
+    width: 65px;
+    height: 65px;
+    object-fit: cover;
     border-radius: 50%;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease;
 }
 
-.user-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
 .user-avatar:hover {
     transform: scale(1.1);
-}
-
-.user-avatar-lg {
-    width: 100px;
-    height: 100px;
-    object-fit: cover;
-    border-radius: 50%;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 /* Buttons */
@@ -353,7 +110,6 @@
 .btn-orange:hover {
     background: linear-gradient(135deg, #ff4500 0%, #ff3300 100%);
     box-shadow: 0 6px 20px rgba(255, 102, 0, 0.4);
-    color: white;
 }
 
 .btn-primary {
@@ -376,24 +132,6 @@
 .btn-danger:hover {
     background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
     box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
-}
-
-.btn-view {
-    background: linear-gradient(135deg, #00bcd4 0%, #0097a7 100%);
-    border: none;
-    color: white;
-    box-shadow: 0 4px 15px rgba(0, 188, 212, 0.3);
-}
-
-.btn-view:hover {
-    background: linear-gradient(135deg, #0097a7 0%, #00838f 100%);
-    box-shadow: 0 6px 20px rgba(0, 188, 212, 0.4);
-    color: white;
-}
-
-.btn-sm {
-    padding: 5px 10px;
-    font-size: 0.8rem;
 }
 
 /* Pagination */
@@ -511,7 +249,7 @@
     height: 100%;
     position: relative;
     overflow: hidden;
-    opacity: 1;
+    opacity: 0;
     transform: translateY(20px);
     transition: opacity 0.5s ease, transform 0.5s ease;
 }
@@ -537,6 +275,11 @@
     margin-bottom: 15px;
 }
 
+.dashboard-card .card-description {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-top: 5px;
+}
 .card-total {
     background-color: #3498db;
     color: white;
@@ -565,6 +308,44 @@
     left: 0;
     background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
     z-index: 0;
+}
+
+/* User Detail Styles */
+.user-info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.user-info-row:last-child {
+    border-bottom: none;
+}
+
+.user-details {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+}
+
+/* Modal Styles */
+.modal-content {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    padding: 15px 20px;
+}
+
+.modal-footer {
+    border-top: 1px solid rgba(0,0,0,0.05);
 }
 
 /* Name Badge */
@@ -614,159 +395,362 @@
     color: #555;
 }
 
-/* User Actions */
+/* User Quick Actions */
 .user-actions {
     display: flex;
-    gap: 5px;
+    gap: 8px;
 }
 
-/* User Detail Styles */
-.user-info-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px 0;
-    border-bottom: 1px solid #eee;
-}
-
-.user-info-row:last-child {
-    border-bottom: none;
-}
-
-.user-details {
-    background-color: #f8f9fa;
-    padding: 15px;
-    border-radius: 12px;
-    margin-bottom: 15px;
-}
-
-/* Modal Styles */
-.modal-content {
+.btn-view {
+    background: linear-gradient(135deg, #00bcd4 0%, #0097a7 100%);
     border: none;
-    border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-}
-
-.modal-header {
-    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
     color: white;
-    border-top-left-radius: 15px;
-    border-top-right-radius: 15px;
-    padding: 15px 20px;
+    box-shadow: 0 4px 15px rgba(0, 188, 212, 0.3);
 }
 
-.modal-footer {
-    border-top: 1px solid rgba(0,0,0,0.05);
-}
-
-/* Alert Styling */
-.alert {
-    border-radius: 10px;
-    border: none;
-}
-
-.alert-success {
-    background-color: #d4edda;
-    color: #155724;
-}
-
-.alert-danger {
-    background-color: #f8d7da;
-    color: #721c24;
+.btn-view:hover {
+    background: linear-gradient(135deg, #0097a7 0%, #00838f 100%);
+    box-shadow: 0 6px 20px rgba(0, 188, 212, 0.4);
 }
 </style>
 @endsection
 
-@push('scripts')
-<script>
-  $(document).ready(function() {
-    // Animate dashboard cards on page load
-    setTimeout(function() {
-        $('.dashboard-card').each(function(index) {
-            setTimeout(() => {
-                $(this).css({
-                    'opacity': 1,
-                    'transform': 'translateY(0)'
-                });
-            }, index * 100);
-        });
-    }, 300);
-    
-    // Initialize DataTable with proper configuration
-    var usersTable = $('#users-table').DataTable({
-        "paging": false,
-        "lengthChange": false,
-        "searching": true,
-        "ordering": true,
-        "info": false,
-        "autoWidth": false,
-        "responsive": true,
-        "language": {
-            "search": "",
-            "searchPlaceholder": "Search Users"
-        }
-    });
-    
-    // Custom search functionality (bypasses DataTables search to work with our UI)
-    $("#userSearch").on("keyup", function() {
-        var value = $(this).val().toLowerCase();
-        usersTable.search(value).draw();
-    });
-    
-    // Filter buttons functionality
-    $(".filter-button").click(function() {
-        // Update button states
-        $(".filter-button").removeClass("active");
-        $(this).addClass("active");
-        
-        var filter = $(this).text().trim().toLowerCase();
-        
-        // Apply custom filtering based on role
-        if(filter === 'all') {
-            // Clear any existing filters
-            usersTable.column(4).search('').draw();
-        } else {
-            // Filter by role column (assuming role is in column index 4)
-            usersTable.column(4).search(filter, true, false).draw();
-        }
-    });
+@section('content')
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="userSearch" class="form-control" placeholder="{{ __('Search Users') }}">
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="filter-buttons text-md-right">
+            <button class="filter-button active">{{ __('All') }}</button>
+            <button class="filter-button">{{ __('Admin') }}</button>
+            <button class="filter-button">{{ __('User') }}</button>
+        </div>
+    </div>
+</div>
 
-    // Delete user functionality
-    $(document).on('click', '.btn-delete', function() {
-        var userId = $(this).data('id');
-        
-        if (confirm("Are you sure you want to delete this user?")) {
-            $('#delete-form-' + userId).submit();
-        }
-    });
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
+        <div class="dashboard-card card-total">
+            <div class="animated-bg"></div>
+            <div class="card-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="card-value">{{ $users->total() }}</div>
+            <div class="card-title">{{ __('Total Users') }}</div>
+        </div>
+    </div>
     
-    // User detail view functionality
-    $(document).on('click', '.btn-user-detail', function(e) {
-        e.preventDefault();
+    <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
+        <div class="dashboard-card card-new">
+            <div class="animated-bg"></div>
+            <div class="card-icon">
+                <i class="fas fa-user-plus"></i>
+            </div>
+            <div class="card-value">{{ $users->where('created_at', '>=', now()->subDays(30))->count() }}</div>
+            <div class="card-title">{{ __('New Users (30 days)') }}</div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
+        <div class="dashboard-card card-returning">
+            <div class="animated-bg"></div>
+            <div class="card-icon">
+                <i class="fas fa-user-shield"></i>
+            </div>
+            <div class="card-value">{{ $users->where('role', 'admin')->count() }}</div>
+            <div class="card-text">
+                <div class="card-title">{{ __('Admin Users') }}</div>
+                <div class="card-description small text-white-50">{{ __('Administrator role') }}</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
+        <div class="dashboard-card card-vip">
+            <div class="animated-bg"></div>
+            <div class="card-icon">
+                <i class="fas fa-user-tag"></i>
+            </div>
+            <div class="card-value">{{ $users->where('role', 'user')->count() }}</div>
+            <div class="card-text">
+                <div class="card-title">{{ __('Standard Users') }}</div>
+                <div class="card-description small text-white-50">{{ __('Regular users') }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Users List Table -->
+<div class="card user-list shadow-sm border-0">
+    <div class="card-header d-flex align-items-center justify-content-between">
+        <h3 class="m-0">{{ __('Users List') }}</h3>
         
-        // Get user data from data attributes
-        var userId = $(this).data('id');
-        var userName = $(this).data('name');
-        var userEmail = $(this).data('email');
-        var userRole = $(this).data('role');
-        var userCreated = $(this).data('created');
+        <div class="d-flex flex-grow-1 justify-content-between align-items-center ml-3">
+            <div class="flex-grow-1 text-center">
+                <a href="{{ route('users.create') }}" class="btn btn-orange">
+                    <i class="fas fa-plus-circle mr-1"></i>
+                    {{ __('Add New Users') }}
+                </a>
+            </div>
+            <div class="text-right">
+                <a href="{{ route('users.export') }}" class="btn btn-success">
+                    <i class="fas fa-file-excel"></i> {{ __('Export to Excel') }}
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card-body table-responsive p-0">
+        @if ($message = Session::get('success'))
+            <div class="alert alert-success alert-dismissible fade show m-3" role="alert">
+                {{ $message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        @endif
+        @if ($message = Session::get('error'))
+            <div class="alert alert-danger alert-dismissible fade show m-3" role="alert">
+                {{ $message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        @endif
+
+        <table class="table table-hover text-nowrap align-middle">
+            <thead>
+                <tr>
+                    <th>{{ __('ID') }}</th>
+                    <th>{{ __('Avatar') }}</th>
+                    <th>{{ __('Name') }}</th>
+                    <th>{{ __('Email') }}</th>
+                    <th>{{ __('Role') }}</th>
+                    <th>{{ __('Created At') }}</th>
+                    <th>{{ __('Actions') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($users as $user)
+                <tr>
+                    <td>{{ $user->id }}</td>
+                    <td>
+                        <img class="user-avatar" src="https://ui-avatars.com/api/?name={{ urlencode($user->first_name . ' ' . $user->last_name) }}&background=random&color=fff" alt="User Avatar">
+                    </td>
+                    <td>
+                        <div class="name-badge">{{ $user->first_name }} {{ $user->last_name }}</div>
+                    </td>
+                    <td>
+                        <div class="email-badge">
+                            <i class="fas fa-envelope"></i> {{ $user->email }}
+                        </div>
+                    </td>
+                    <td>
+                        <span class="role-badge {{ $user->role === 'admin' ? 'role-admin' : 'role-user' }}">
+                            {{ ucfirst($user->role) }}
+                        </span>
+                    </td>
+                    <td>
+                        <span title="{{ $user->created_at }}">
+                            {{ \Carbon\Carbon::parse($user->created_at)->format('M d, Y') }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="user-actions">
+                            <a href="{{ route('users.edit', $user->id) }}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            @if(auth()->id() !== $user->id)
+                                <button class="btn btn-sm btn-danger btn-delete" data-url="{{ route('users.destroy', $user->id) }}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            @endif
+                            <a href="#" class="btn btn-sm btn-view btn-user-detail" data-id="{{ $user->id }}">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer">
+        <div class="d-flex justify-content-center">
+            {{ $users->render() }}
+        </div>
+    </div>
+</div>
+
+<!-- User Detail Modal -->
+<div class="modal fade" id="userDetailModal" tabindex="-1" role="dialog" aria-labelledby="userDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="userDetailModalLabel">{{ __('User Detail') }}</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </div>
+                <div id="userDetailContent" style="display: none;">
+                    <div class="text-center mb-4">
+                        <img id="modal-user-avatar" class="user-avatar" style="width: 100px; height: 100px;" src="" alt="User Avatar">
+                        <h4 id="modal-user-name" class="mt-3"></h4>
+                    </div>
+                    <div class="user-details">
+                        <div class="user-info-row">
+                            <strong><i class="fas fa-envelope"></i> {{ __('Email') }}:</strong>
+                            <span id="modal-user-email"></span>
+                        </div>
+                        <div class="user-info-row">
+                            <strong><i class="fas fa-user-tag"></i> {{ __('Role') }}:</strong>
+                            <span id="modal-user-role"></span>
+                        </div>
+                        <div class="user-info-row">
+                            <strong><i class="fas fa-calendar-alt"></i> {{ __('Created At') }}:</strong>
+                            <span id="modal-user-created"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a id="modal-user-edit" href="#" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> {{ __('Edit') }}
+                </a>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times"></i> {{ __('Close') }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@endsection
+
+@section('js')
+<script src="{{ asset('plugins/sweetalert2/sweetalert2.min.js') }}"></script>
+<script type="module">
+    $(document).ready(function() {
+        // Animate dashboard cards on page load
+        setTimeout(function() {
+            $('.dashboard-card').each(function(index) {
+                setTimeout(() => {
+                    $(this).css({
+                        'opacity': 1,
+                        'transform': 'translateY(0)'
+                    });
+                }, index * 100);
+            });
+        }, 300);
         
-        // Set avatar
-        var avatar = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(userName) + '&background=random&color=fff';
+        // Initialize search functionality
+        $("#userSearch").on("keyup", function() {
+            var value = $(this).val().toLowerCase();
+            $("table tbody tr").filter(function() {
+                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+            });
+        });
         
-        // Set edit link
-        var editLink = "/users/" + userId + "/edit"; // Simplified URL construction
+        // Filter buttons functionality
+        $(".filter-button").click(function() {
+            $(".filter-button").removeClass("active");
+            $(this).addClass("active");
+            
+            var filter = $(this).text().trim().toLowerCase();
+            if(filter === '{{ strtolower(__("All")) }}') {
+                $("table tbody tr").show();
+            } else if(filter === '{{ strtolower(__("Admin")) }}') {
+                $("table tbody tr").hide();
+                $("table tbody tr").filter(function() {
+                    return $(this).find('.role-admin').length > 0;
+                }).show();
+            } else if(filter === '{{ strtolower(__("User")) }}') {
+                $("table tbody tr").hide();
+                $("table tbody tr").filter(function() {
+                    return $(this).find('.role-user').length > 0;
+                }).show();
+            }
+        });
         
-        // Populate modal
-        $('#modal-user-avatar').attr('src', avatar);
-        $('#modal-user-name').text(userName);
-        $('#modal-user-email').text(userEmail);
-        $('#modal-user-role').text(userRole);
-        $('#modal-user-created').text(userCreated);
-        $('#modal-user-edit').attr('href', editLink);
+        // Delete user functionality
+        $(document).on('click', '.btn-delete', function() {
+            var $this = $(this);
+            const swalWithBootstrapButtons = Swal.mixin({
+                customClass: {
+                    confirmButton: 'btn btn-success',
+                    cancelButton: 'btn btn-danger'
+                },
+                buttonsStyling: false
+            });
+
+            swalWithBootstrapButtons.fire({
+                title: '{{ __('Are you sure?') }}',
+                text: '{{ __('You will not be able to recover this user!') }}',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '{{ __('Yes, delete it!') }}',
+                cancelButtonText: '{{ __('No, cancel!') }}',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.value) {
+                    $.post($this.data('url'), {
+                        _method: 'DELETE',
+                        _token: '{{ csrf_token() }}'
+                    }, function(res) {
+                        $this.closest('tr').fadeOut(500, function() {
+                            $(this).remove();
+                            
+                            // Update card counts after deletion
+                            let totalCount = parseInt($('.card-total .card-value').text()) - 1;
+                            $('.card-total .card-value').text(totalCount);
+                        });
+                    });
+                }
+            });
+        });
         
-        // Show modal
-        $('#userDetailModal').modal('show');
+        // User detail view functionality
+        $(document).on('click', '.btn-user-detail', function(e) {
+            e.preventDefault();
+            
+            // Get the user ID
+            var userId = $(this).data('id');
+            
+            // Get data from the row
+            var $row = $(this).closest('tr');
+            
+            // Show modal and loading spinner
+            $('#userDetailModal').modal('show');
+            $('#userDetailContent').hide();
+            $('.spinner-border').show();
+            
+            // Simulate AJAX loading
+            setTimeout(function() {
+                $('.spinner-border').hide();
+                $('#userDetailContent').show();
+                
+                // Populate the modal with user data from the row
+                $('#modal-user-avatar').attr('src', $row.find('.user-avatar').attr('src'));
+                $('#modal-user-name').text($row.find('.name-badge').text());
+                $('#modal-user-email').text($row.find('.email-badge').text().trim());
+                $('#modal-user-role').text($row.find('.role-badge').text());
+                $('#modal-user-created').text($row.find('td:eq(5)').text().trim());
+                
+                // Set edit link
+                $('#modal-user-edit').attr('href', $row.find('a[href*="edit"]').attr('href'));
+            }, 500);
+        });
     });
-});
 </script>
-@endpush
+@endsection

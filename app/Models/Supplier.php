@@ -19,6 +19,20 @@ class Supplier extends Model
         'avatar'
     ];
 
+    /**
+     * Get the full avatar URL
+     * 
+     * @return string
+     */
+    public function getAvatarUrl()
+    {
+        if ($this->avatar) {
+            return asset('storage/' . $this->avatar);
+        }
+
+        return asset('img/default-supplier.png');
+    }
+
     // Define relationships here (e.g., with the Product model)
     /**
      * Get the supplier's full name.
