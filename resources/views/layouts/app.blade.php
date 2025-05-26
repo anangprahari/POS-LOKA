@@ -473,6 +473,7 @@
                 justify-content: center;
                 margin-top: 1rem;
             }
+            
         }
     </style>
 </head>
@@ -484,7 +485,7 @@
             <div class="container nav-container">
                 <!-- Logo -->
                 <a class="nav-logo" href="{{ url('/') }}">
-                    <img src="{{ asset('images/kopi-loka-favicon.png') }}" alt="Logo">
+                    <img src="{{ asset('images/kopi-loka-favicon.png') }}" alt="Logo" style="border-radius: 50%; object-fit: cover; width: 34px; height: 34px;">
                     KOPI LOKA
                 </a>
 
@@ -580,7 +581,7 @@
                 <div class="footer-content">
                     <div>
                         <div class="footer-brand">
-                            <img src="{{ asset('images/kopi-loka-favicon.png') }}" alt="Logo">
+                            <img src="{{ asset('images/kopi-loka-favicon.png') }}" alt="Logo" style="border-radius: 50%; object-fit: cover; width: 40px; height: 40px;">
                             <div class="footer-brand-text">
                                 <div class="footer-brand-name">KOPI LOKA</div>
                                 <div class="footer-brand-tagline">Temani harimu dengan secangkir kopi</div>
