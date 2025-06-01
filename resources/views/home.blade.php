@@ -747,7 +747,7 @@
                 </div>
                 <div class="card-value">{{$customers_count}}</div>
                 <div class="card-title" style="font-size: 24px; color: white;">
-                    {{ __('Customers Count') }}
+                    {{ __('Members Count') }}
                 </div>                
                 <div class="statistic-change increment">
                 </div>
@@ -1044,6 +1044,43 @@
 <script>
    // This will enhance the existing tab functionality
    $(document).ready(function() {
+
+  // Calculate income statistics for Last 7 days chart
+  const incomeData = JSON.parse('{!! $last_7_days_data !!}');
+        if (incomeData && incomeData.length > 0) {
+            // Calculate total
+            const totalIncome = incomeData.reduce((sum, value) => sum + value, 0);
+            const averageIncome = totalIncome / incomeData.length;
+            
+            // Format with currency
+            const currencySymbol = "{{ config('settings.currency_symbol') }}";
+            document.getElementById('total-income').textContent = currencySymbol + ' ' + totalIncome.toLocaleString('id-ID');
+            document.getElementById('average-income').textContent = currencySymbol + ' ' + averageIncome.toLocaleString('id-ID');
+
+            
+            // Determine trend
+            const firstHalf = incomeData.slice(0, Math.floor(incomeData.length / 2));
+            const secondHalf = incomeData.slice(Math.floor(incomeData.length / 2));
+            
+            const firstHalfAvg = firstHalf.reduce((sum, val) => sum + val, 0) / firstHalf.length;
+            const secondHalfAvg = secondHalf.reduce((sum, val) => sum + val, 0) / secondHalf.length;
+            
+            const trendElement = document.getElementById('income-trend');
+            if (secondHalfAvg > firstHalfAvg) {
+                const increasePercent = ((secondHalfAvg - firstHalfAvg) / firstHalfAvg * 100).toFixed(1);
+                trendElement.textContent = `${increasePercent}% {{ __('Up') }}`;
+                trendElement.classList.add('text-success');
+            } else if (secondHalfAvg < firstHalfAvg) {
+                const decreasePercent = ((firstHalfAvg - secondHalfAvg) / firstHalfAvg * 100).toFixed(1);
+                trendElement.textContent = `${decreasePercent}% {{ __('Down') }}`;
+                trendElement.classList.add('text-danger');
+            } else {
+                trendElement.textContent = `{{ __('Stable') }}`;
+                trendElement.classList.add('text-secondary');
+            }
+        }
+    });
+
         // Enhanced tab functionality with smooth transitions
         $('.tab-button').on('click', function() {
             var tabId = $(this).data('tab');
@@ -1557,40 +1594,7 @@
             }, 100 * index);
         });
         
-        // Calculate income statistics for Last 7 days chart
-        const incomeData = JSON.parse('{!! $last_7_days_data !!}');
-        if (incomeData && incomeData.length > 0) {
-            // Calculate total
-            const totalIncome = incomeData.reduce((sum, value) => sum + value, 0);
-            const averageIncome = totalIncome / incomeData.length;
-            
-            // Format with currency
-            const currencySymbol = "{{ config('settings.currency_symbol') }}";
-            document.getElementById('total-income').textContent = currencySymbol + ' ' + totalIncome.toFixed(2);
-            document.getElementById('average-income').textContent = currencySymbol + ' ' + averageIncome.toFixed(2);
-            
-            // Determine trend
-            const firstHalf = incomeData.slice(0, Math.floor(incomeData.length / 2));
-            const secondHalf = incomeData.slice(Math.floor(incomeData.length / 2));
-            
-            const firstHalfAvg = firstHalf.reduce((sum, val) => sum + val, 0) / firstHalf.length;
-            const secondHalfAvg = secondHalf.reduce((sum, val) => sum + val, 0) / secondHalf.length;
-            
-            const trendElement = document.getElementById('income-trend');
-            if (secondHalfAvg > firstHalfAvg) {
-                const increasePercent = ((secondHalfAvg - firstHalfAvg) / firstHalfAvg * 100).toFixed(1);
-                trendElement.textContent = `${increasePercent}% {{ __('Up') }}`;
-                trendElement.classList.add('text-success');
-            } else if (secondHalfAvg < firstHalfAvg) {
-                const decreasePercent = ((firstHalfAvg - secondHalfAvg) / firstHalfAvg * 100).toFixed(1);
-                trendElement.textContent = `${decreasePercent}% {{ __('Down') }}`;
-                trendElement.classList.add('text-danger');
-            } else {
-                trendElement.textContent = `{{ __('Stable') }}`;
-                trendElement.classList.add('text-secondary');
-            }
-        }
-    });
+      
     
     // Toggle between time periods for the chart
     document.querySelectorAll('[data-period]').forEach(function(button) {

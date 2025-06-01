@@ -96,7 +96,7 @@ class CustomerController extends Controller
 
         return (new FastExcel($formattedCustomers))
             ->headerStyle($headerStyle)
-            ->download('customers_report.xlsx');
+            ->download('members_report.xlsx');
     }
 
     /**
@@ -167,7 +167,7 @@ class CustomerController extends Controller
         if (!$customer) {
             return redirect()->back()->with('error', __('customer.error_creating'));
         }
-        return redirect()->route('customers.index')->with('success', __('customer.succes_creating'));
+        return redirect()->route('customers.index')->with('success', __('Success, your member have been created.'));
     }
 
     /**

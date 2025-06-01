@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', __('supplier.Create_supplier'))
-@section('content-header', __('supplier.Create_supplier'))
+@section('content-header', __('Create Supplier'))
 @section('content-actions')
 <a href="{{ route('suppliers.index') }}" class="btn btn-sm btn-secondary">
     <i class="fas fa-arrow-left mr-1"></i>
@@ -289,7 +289,7 @@
 @section('content')
 <div class="card">
     <div class="card-header">
-        <h3><i class="fas fa-user-tie mr-2"></i>{{ __('supplier.Create_supplier') }}</h3>
+        <h3><i class="fas fa-user-tie mr-2"></i>{{ __('Create Supplier') }}</h3>
     </div>
     <div class="card-body">
         <form action="{{ route('suppliers.store') }}" method="POST" enctype="multipart/form-data">
@@ -301,13 +301,13 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label for="first_name">{{ __('supplier.First_Name') }}</label>
+                            <label for="first_name">{{ __('First Name') }}</label>
                             <div class="input-group">
                                 <div class="input-group-prepend">
                                     <span class="input-group-text"><i class="fas fa-user"></i></span>
                                 </div>
                                 <input type="text" name="first_name" class="form-control @error('first_name') is-invalid @enderror"
-                                    id="first_name" placeholder="{{ __('supplier.First_Name') }}" value="{{ old('first_name') }}">
+                                    id="first_name" placeholder="{{ __('First Name') }}" value="{{ old('first_name') }}">
                             </div>
                             @error('first_name')
                             <span class="invalid-feedback d-block" role="alert">
@@ -319,13 +319,13 @@
                     
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label for="last_name">{{ __('supplier.Last_Name') }}</label>
+                            <label for="last_name">{{ __('Last Name') }}</label>
                             <div class="input-group">
                                 <div class="input-group-prepend">
                                     <span class="input-group-text"><i class="fas fa-user"></i></span>
                                 </div>
                                 <input type="text" name="last_name" class="form-control @error('last_name') is-invalid @enderror"
-                                    id="last_name" placeholder="{{ __('supplier.Last_Name') }}" value="{{ old('last_name') }}">
+                                    id="last_name" placeholder="{{ __('Last Name') }}" value="{{ old('last_name') }}">
                             </div>
                             @error('last_name')
                             <span class="invalid-feedback d-block" role="alert">
@@ -343,13 +343,13 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label for="email">{{ __('supplier.Email') }}</label>
+                            <label for="email">{{ __('Email') }}</label>
                             <div class="input-group">
                                 <div class="input-group-prepend">
                                     <span class="input-group-text"><i class="fas fa-envelope"></i></span>
                                 </div>
                                 <input type="email" name="email" class="form-control @error('email') is-invalid @enderror"
-                                    id="email" placeholder="{{ __('supplier.Email') }}" value="{{ old('email') }}">
+                                    id="email" placeholder="{{ __('Email') }}" value="{{ old('email') }}">
                             </div>
                             @error('email')
                             <span class="invalid-feedback d-block" role="alert">
@@ -361,13 +361,13 @@
                     
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label for="phone">{{ __('supplier.Phone') }}</label>
+                            <label for="phone">{{ __('Phone') }}</label>
                             <div class="input-group">
                                 <div class="input-group-prepend">
                                     <span class="input-group-text"><i class="fas fa-phone"></i></span>
                                 </div>
                                 <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror"
-                                    id="phone" placeholder="{{ __('supplier.Phone') }}" value="{{ old('phone') }}">
+                                    id="phone" placeholder="{{ __('Phone') }}" value="{{ old('phone') }}">
                             </div>
                             @error('phone')
                             <span class="invalid-feedback d-block" role="alert">
@@ -379,13 +379,13 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="address">{{ __('supplier.Address') }}</label>
+                    <label for="address">{{ __('Address') }}</label>
                     <div class="input-group">
                         <div class="input-group-prepend">
                             <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
                         </div>
                         <input type="text" name="address" class="form-control @error('address') is-invalid @enderror"
-                            id="address" placeholder="{{ __('supplier.Address') }}" value="{{ old('address') }}">
+                            id="address" placeholder="{{ __('Address') }}" value="{{ old('address') }}">
                     </div>
                     @error('address')
                     <span class="invalid-feedback d-block" role="alert">
@@ -399,10 +399,10 @@
                 <div class="form-section-title">{{ __('Profile Image') }}</div>
                 
                 <div class="form-group">
-                    <label for="avatar">{{ __('supplier.Avatar') }}</label>
+                    <label for="avatar">{{ __('Avatar') }}</label>
                     <div class="custom-file">
                         <input type="file" class="custom-file-input" name="avatar" id="avatar">
-                        <label class="custom-file-label" for="avatar">{{ __('supplier.Choose_file') }}</label>
+                        <label class="custom-file-label" for="avatar">{{ __('Choose file') }}</label>
                     </div>
                     @error('avatar')
                     <span class="invalid-feedback d-block" role="alert">

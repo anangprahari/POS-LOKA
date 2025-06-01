@@ -16,12 +16,12 @@ class Cart extends Component {
             customer_id: "",
             translations: {},
             paymentMethod: "cash",
-            discount: 0,
+            discount: "",
             discountType: "fixed",
             note: "",
             showTransactionHistory: false,
             recentTransactions: [],
-            cashAmount: 0,
+            cashAmount: "",
             showProductDetails: false,
             selectedProduct: null,
             holdOrders: [],
@@ -29,7 +29,7 @@ class Cart extends Component {
             loading: false,
             activeTab: "products",
         };
-        
+
         // Binding methods
         this.loadCart = this.loadCart.bind(this);
         this.handleOnChangeBarcode = this.handleOnChangeBarcode.bind(this);
@@ -43,10 +43,13 @@ class Cart extends Component {
         this.handleClickSubmit = this.handleClickSubmit.bind(this);
         this.loadTranslations = this.loadTranslations.bind(this);
         this.handleDiscountChange = this.handleDiscountChange.bind(this);
-        this.handleDiscountTypeChange = this.handleDiscountTypeChange.bind(this);
-        this.handlePaymentMethodChange = this.handlePaymentMethodChange.bind(this);
+        this.handleDiscountTypeChange =
+        this.handleDiscountTypeChange.bind(this);
+        this.handlePaymentMethodChange =
+        this.handlePaymentMethodChange.bind(this);
         this.handleNoteChange = this.handleNoteChange.bind(this);
-        this.toggleTransactionHistory = this.toggleTransactionHistory.bind(this);
+        this.toggleTransactionHistory =
+        this.toggleTransactionHistory.bind(this);
         this.loadRecentTransactions = this.loadRecentTransactions.bind(this);
         this.handleCashAmountChange = this.handleCashAmountChange.bind(this);
         this.calculateChange = this.calculateChange.bind(this);
@@ -108,7 +111,14 @@ class Cart extends Component {
     }
 
     loadCart() {
-        axios.get("/cart").then((res) => this.setState({ cart: res.data }));
+        axios
+            .get("/cart")
+            .then((response) => {
+                this.setState({ cart: response.data });
+            })
+            .catch((error) => {
+                console.error("Error loading cart:", error);
+            });
     }
 
     handleOnChangeBarcode(e) {
@@ -189,18 +199,58 @@ class Cart extends Component {
 
     handleEmptyCart() {
         Swal.fire({
-            title: "Empty Cart?",
-            text: "This will remove all items from your cart!",
+            title: this.state.translations.empty_cart_title || "Empty Cart?",
+            text:
+                this.state.translations.empty_cart_text ||
+                "This will remove all items from your cart!",
             icon: "warning",
             showCancelButton: true,
             confirmButtonColor: "#e74c3c",
             cancelButtonColor: "#6c757d",
-            confirmButtonText: "Yes, empty cart!",
+            confirmButtonText:
+                this.state.translations.yes_empty || "Yes, empty cart!",
+            cancelButtonText: this.state.translations.cancel || "Cancel",
         }).then((result) => {
             if (result.isConfirmed) {
+                // Loading state
+                this.setState({ loading: true });
+
                 axios
-                    .post("/cart/empty", { _method: "DELETE" })
-                    .then(() => this.setState({ cart: [] }));
+                    .post("/cart/empty")
+                    .then((response) => {
+                        this.setState({
+                            cart: [],
+                            loading: false,
+                        });
+
+                        // Reload cart to make sure it's synced
+                        this.loadCart();
+
+                        Swal.fire({
+                            title:
+                                this.state.translations.success || "Success!",
+                            text:
+                                this.state.translations.cart_emptied ||
+                                "Cart has been emptied successfully!",
+                            icon: "success",
+                            timer: 1500,
+                            showConfirmButton: false,
+                        });
+                    })
+                    .catch((error) => {
+                        console.error("Error emptying cart:", error);
+                        this.setState({ loading: false });
+
+                        Swal.fire({
+                            title: this.state.translations.error || "Error!",
+                            text:
+                                this.state.translations.empty_cart_error ||
+                                "Failed to empty cart. Please try again.",
+                            icon: "error",
+                            confirmButtonText:
+                                this.state.translations.ok || "OK",
+                        });
+                    });
             }
         });
     }
@@ -941,8 +991,10 @@ class Cart extends Component {
     }
 
     handleCancel = () => {
-        this.handleEmptyCart();
-    };
+    console.log('Cancel button clicked');
+    console.log('Current cart:', this.state.cart);
+    this.handleEmptyCart();
+};
 
     handleCheckout = () => {
         this.handleClickSubmit();
@@ -970,7 +1022,7 @@ class Cart extends Component {
             showProductDetails,
             selectedProduct,
             activeTab,
-            loading
+            loading,
         } = this.state;
 
         const changeAmount = this.calculateChange();
@@ -1476,6 +1528,88 @@ class Cart extends Component {
                             font-size: 0.875rem;
                         }
                     }
+
+                    /* Payment Method Badge Colors - Improved Contrast */
+                    .payment-cash {
+                        background: linear-gradient(
+                            135deg,
+                            #10b981 0%,
+                            #059669 100%
+                        );
+                        color: white;
+                        border: 1px solid #059669;
+                    }
+
+                    .payment-card {
+                        background: linear-gradient(
+                            135deg,
+                            #3b82f6 0%,
+                            #1d4ed8 100%
+                        );
+                        color: white;
+                        border: 1px solid #1d4ed8;
+                    }
+
+                    .payment-bank {
+                        background: linear-gradient(
+                            135deg,
+                            #f59e0b 0%,
+                            #d97706 100%
+                        );
+                        color: white;
+                        border: 1px solid #d97706;
+                    }
+
+                    .payment-ewallet {
+                        background: linear-gradient(
+                            135deg,
+                            #8b5cf6 0%,
+                            #7c3aed 100%
+                        );
+                        color: white;
+                        border: 1px solid #7c3aed;
+                    }
+
+                    /* Hover Effects */
+                    .payment-cash:hover {
+                        background: linear-gradient(
+                            135deg,
+                            #059669 0%,
+                            #047857 100%
+                        );
+                        transform: translateY(-1px);
+                        box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+                    }
+
+                    .payment-card:hover {
+                        background: linear-gradient(
+                            135deg,
+                            #1d4ed8 0%,
+                            #1e40af 100%
+                        );
+                        transform: translateY(-1px);
+                        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+                    }
+
+                    .payment-bank:hover {
+                        background: linear-gradient(
+                            135deg,
+                            #d97706 0%,
+                            #b45309 100%
+                        );
+                        transform: translateY(-1px);
+                        box-shadow: 0 4px 8px rgba(245, 158, 11, 0.3);
+                    }
+
+                    .payment-ewallet:hover {
+                        background: linear-gradient(
+                            135deg,
+                            #7c3aed 0%,
+                            #6d28d9 100%
+                        );
+                        transform: translateY(-1px);
+                        box-shadow: 0 4px 8px rgba(139, 92, 246, 0.3);
+                    }
                 `}</style>
 
                 {/* Main Layout */}
@@ -1488,39 +1622,38 @@ class Cart extends Component {
                                     <h2 className="mb-0 text-primary">
                                         {window.APP.store_name || "POS System"}
                                     </h2>
-                                        <div className="d-flex gap-2">
-                                            <button
-                                                className={`btn ${
-                                                    showTransactionHistory
-                                                        ? "btn-outline-orange" // Ketika aktif
-                                                        : "btn-orange" // Ketika tidak aktif
-                                                }`}
-                                                onClick={() =>
-                                                    this.setState({
-                                                        showTransactionHistory: false,
-                                                    })
-                                                }
-                                            >
-                                                <i className="fas fa-shopping-cart me-2"></i>
-                                                {translations["pos"] ||
-                                                    "Point of Sale"}
-                                            </button>
-                                            <button
-                                                className={`btn ${
-                                                    showTransactionHistory
-                                                        ? "btn-orange" // Ketika aktif
-                                                        : "btn-outline-orange" // Ketika tidak aktif
-                                                }`}
-                                                onClick={
-                                                    this
-                                                        .toggleTransactionHistory
-                                                }
-                                            >
-                                                <i className="fas fa-history me-2"></i>
-                                                {translations["transactions"] ||
-                                                    "Transactions"}
-                                            </button>
-                                        </div>
+                                    <div className="d-flex gap-2">
+                                        <button
+                                            className={`btn mr-2 ${
+                                                showTransactionHistory
+                                                    ? "btn-outline-orange" // Ketika aktif
+                                                    : "btn-orange" // Ketika tidak aktif
+                                            }`}
+                                            onClick={() =>
+                                                this.setState({
+                                                    showTransactionHistory: false,
+                                                })
+                                            }
+                                        >
+                                            <i className="fas fa-shopping-cart me-2"></i>
+                                            {translations["pos"] ||
+                                                "Point of Sale"}
+                                        </button>
+                                        <button
+                                            className={`btn ${
+                                                showTransactionHistory
+                                                    ? "btn-orange" // Ketika aktif
+                                                    : "btn-outline-orange" // Ketika tidak aktif
+                                            }`}
+                                            onClick={
+                                                this.toggleTransactionHistory
+                                            }
+                                        >
+                                            <i className="fas fa-history me-2"></i>
+                                            {translations["transactions"] ||
+                                                "Transactions"}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1616,28 +1749,17 @@ class Cart extends Component {
                                                                     </td>
                                                                     <td>
                                                                         <span
-                                                                            className={`badge bg-${
+                                                                            className={`badge payment-${
                                                                                 transaction.payment_method ===
                                                                                 "cash"
-                                                                                    ? "success"
+                                                                                    ? "cash"
                                                                                     : transaction.payment_method ===
                                                                                       "card"
-                                                                                    ? "info"
+                                                                                    ? "card"
                                                                                     : transaction.payment_method ===
                                                                                       "bank_transfer"
-                                                                                    ? "warning"
-                                                                                    : "primary"
-                                                                            }-light text-${
-                                                                                transaction.payment_method ===
-                                                                                "cash"
-                                                                                    ? "success"
-                                                                                    : transaction.payment_method ===
-                                                                                      "card"
-                                                                                    ? "info"
-                                                                                    : transaction.payment_method ===
-                                                                                      "bank_transfer"
-                                                                                    ? "warning"
-                                                                                    : "primary"
+                                                                                    ? "bank"
+                                                                                    : "ewallet"
                                                                             }`}
                                                                         >
                                                                             {transaction.payment_method.toUpperCase()}
@@ -1738,7 +1860,7 @@ class Cart extends Component {
                                         {/* Customer and Barcode Section */}
                                         <div className="p-3 border-bottom">
                                             <div className="mb-3">
-                                                <label className="form-label small text-muted mb-1">
+                                                <label className="form-label small text-muted mb-1 mr-2">
                                                     {translations["customer"] ||
                                                         "Customer"}
                                                 </label>
@@ -1782,7 +1904,7 @@ class Cart extends Component {
                                                 <div className="input-group">
                                                     <input
                                                         type="text"
-                                                        className="form-control"
+                                                        className="form-control mr-2"
                                                         placeholder={
                                                             translations[
                                                                 "scan_barcode_placeholder"
@@ -1819,47 +1941,30 @@ class Cart extends Component {
                                                     {cart.map((item) => (
                                                         <div
                                                             key={item.id}
-                                                            className="cart-item"
+                                                            className="cart-item border-bottom pb-3 mb-3"
                                                         >
-                                                            <div className="d-flex justify-content-between align-items-start">
+                                                            {/* Header: Item Name and Total Price */}
+                                                            <div className="d-flex justify-content-between align-items-center mb-2">
                                                                 <div className="flex-grow-1">
-                                                                    <div className="fw-medium">
+                                                                    <h6
+                                                                        className="mb-0 fw-medium text-truncate"
+                                                                        style={{
+                                                                            maxWidth:
+                                                                                "200px",
+                                                                        }}
+                                                                    >
                                                                         {
                                                                             item.name
                                                                         }
-                                                                    </div>
-                                                                    {item.original_price && (
-                                                                        <small className="discount-badge rounded px-2 py-1">
-                                                                            {item
-                                                                                .discount_info
-                                                                                .type ===
-                                                                            "percentage"
-                                                                                ? `${item.discount_info.amount}% off`
-                                                                                : `${window.APP.currency_symbol}${item.discount_info.amount} off`}
-                                                                        </small>
-                                                                    )}
+                                                                    </h6>
                                                                 </div>
                                                                 <div className="text-end">
-                                                                    {item.original_price && (
-                                                                        <div className="text-decoration-line-through text-muted small">
-                                                                            {
-                                                                                window
-                                                                                    .APP
-                                                                                    .currency_symbol
-                                                                            }{" "}
-                                                                            {parseFloat(
-                                                                                item.original_price
-                                                                            ).toFixed(
-                                                                                2
-                                                                            )}
-                                                                        </div>
-                                                                    )}
-                                                                    <div className="fw-bold">
+                                                                    <div className="fw-bold fs-6 text-primary">
                                                                         {
                                                                             window
                                                                                 .APP
                                                                                 .currency_symbol
-                                                                        }{" "}
+                                                                        }
                                                                         {(
                                                                             item.price *
                                                                             item
@@ -1872,30 +1977,40 @@ class Cart extends Component {
                                                                 </div>
                                                             </div>
 
-                                                            <div className="d-flex justify-content-between align-items-center mt-2">
-                                                                <div className="d-flex align-items-center">
-                                                                    <input
-                                                                        type="number"
-                                                                        min="1"
-                                                                        className="qty-input me-2"
-                                                                        value={
-                                                                            item
-                                                                                .pivot
-                                                                                .quantity
-                                                                        }
-                                                                        onChange={(
-                                                                            e
-                                                                        ) =>
-                                                                            this.handleChangeQty(
-                                                                                item.id,
+                                                            {/* Body: Quantity Controls and Unit Price */}
+                                                            <div className="d-flex justify-content-between align-items-center">
+                                                                {/* Left side: Quantity and Remove button */}
+                                                                <div className="d-flex align-items-center gap-2">
+                                                                    <div className="d-flex align-items-center">
+                                                                        <label className="form-label mb-0 me-2 small text-muted">
+                                                                            Qty:
+                                                                        </label>
+                                                                        <input
+                                                                            type="number"
+                                                                            min="1"
+                                                                            className="form-control form-control-sm"
+                                                                            style={{
+                                                                                width: "70px",
+                                                                            }}
+                                                                            value={
+                                                                                item
+                                                                                    .pivot
+                                                                                    .quantity
+                                                                            }
+                                                                            onChange={(
                                                                                 e
-                                                                                    .target
-                                                                                    .value
-                                                                            )
-                                                                        }
-                                                                    />
+                                                                            ) =>
+                                                                                this.handleChangeQty(
+                                                                                    item.id,
+                                                                                    e
+                                                                                        .target
+                                                                                        .value
+                                                                                )
+                                                                            }
+                                                                        />
+                                                                    </div>
                                                                     <button
-                                                                        className="btn btn-sm btn-outline-danger me-1"
+                                                                        className="btn btn-sm btn-outline-danger d-flex align-items-center gap-1"
                                                                         onClick={() =>
                                                                             this.handleClickDelete(
                                                                                 item.id
@@ -1908,37 +2023,42 @@ class Cart extends Component {
                                                                             "Remove"
                                                                         }
                                                                     >
-                                                                        <i className="fas fa-trash"></i>
-                                                                    </button>
-                                                                    <button
-                                                                        className="btn btn-sm btn-outline-primary"
-                                                                        onClick={() =>
-                                                                            this.applyItemDiscount(
-                                                                                item.id
-                                                                            )
-                                                                        }
-                                                                        title={
-                                                                            translations[
-                                                                                "discount"
-                                                                            ] ||
-                                                                            "Discount"
-                                                                        }
-                                                                    >
-                                                                        <i className="fas fa-percent"></i>
+                                                                        <i className="fas fa-trash fa-xs"></i>
+                                                                        <span className="d-none d-md-inline small">
+                                                                            Remove
+                                                                        </span>
                                                                     </button>
                                                                 </div>
-                                                                <div className="text-muted small">
-                                                                    {
-                                                                        window
-                                                                            .APP
-                                                                            .currency_symbol
-                                                                    }{" "}
-                                                                    {parseFloat(
-                                                                        item.price
-                                                                    ).toFixed(
-                                                                        2
-                                                                    )}{" "}
-                                                                    each
+
+                                                                {/* Right side: Unit price */}
+                                                                <div className="text-end">
+                                                                    <div className="small text-muted">
+                                                                        {
+                                                                            window
+                                                                                .APP
+                                                                                .currency_symbol
+                                                                        }
+                                                                        {parseFloat(
+                                                                            item.price
+                                                                        ).toFixed(
+                                                                            2
+                                                                        )}{" "}
+                                                                        per item
+                                                                    </div>
+                                                                    <div className="small text-muted">
+                                                                        ×{" "}
+                                                                        {
+                                                                            item
+                                                                                .pivot
+                                                                                .quantity
+                                                                        }{" "}
+                                                                        {item
+                                                                            .pivot
+                                                                            .quantity >
+                                                                        1
+                                                                            ? "items"
+                                                                            : "item"}
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -2033,7 +2153,7 @@ class Cart extends Component {
                                                 </div>
 
                                                 <div className="mb-3">
-                                                    <label className="form-label small text-muted mb-1">
+                                                    <label className="form-label small text-muted mb-1 mr-2">
                                                         {translations[
                                                             "payment_method"
                                                         ] || "Payment Method"}
@@ -2234,7 +2354,7 @@ class Cart extends Component {
                                             </h5>
                                             <div className="d-flex gap-2">
                                                 <button
-                                                    className="btn btn-hold btn-sm"
+                                                    className="btn btn-hold btn-sm mr-2"
                                                     onClick={this.holdOrder}
                                                     disabled={cart.length === 0}
                                                 >
@@ -2575,7 +2695,6 @@ class Cart extends Component {
             </div>
         );
     }
-
 
     viewTransactionDetails(transactionId) {
         axios
