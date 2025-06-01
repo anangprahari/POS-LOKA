@@ -124,11 +124,17 @@ class CustomerController extends Controller
     {
         return DB::table('customers')
             ->join('orders', 'customers.id', '=', 'orders.customer_id')
-            ->select('customers.id')
+            ->select(
+                'customers.id',
+                DB::raw('SUM(orders.total_amount) as total_spent'),
+                DB::raw('COUNT(orders.id) as total_orders')
+            )
             ->groupBy('customers.id')
-            ->havingRaw('SUM(orders.total_amount) > 100000 OR COUNT(orders.id) > 5')
+            ->having('total_spent', '>', 100000)
+            ->orHaving('total_orders', '>', 5)
             ->count();
     }
+    
 
     /**
      * Show the form for creating a new resource.
