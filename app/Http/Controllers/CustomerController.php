@@ -128,9 +128,11 @@ class CustomerController extends Controller
                 DB::raw('COUNT(orders.id) as total_orders')
             )
             ->groupBy('customers.id')
-            ->havingRaw('SUM(orders.total_amount) > 100000 OR COUNT(orders.id) > 5')
+            ->having('total_spent', '>', 100000)
+            ->orHaving('total_orders', '>', 5)
             ->count();
     }
+    
 
 
     /**
