@@ -381,10 +381,10 @@ class Cart extends Component {
                             customer_id: "",
                             selectedCustomer: null,
                             paymentMethod: "cash",
-                            discount: 0,
+                            discount: "",
                             discountType: "fixed",
                             note: "",
-                            cashAmount: 0,
+                            cashAmount: "",
                             search: "",
                         });
 
@@ -1982,7 +1982,7 @@ class Cart extends Component {
                                                                 {/* Left side: Quantity and Remove button */}
                                                                 <div className="d-flex align-items-center gap-2">
                                                                     <div className="d-flex align-items-center">
-                                                                        <label className="form-label mb-0 me-2 small text-muted">
+                                                                        <label className="form-label mb-0 me-2 small text-muted mr-2">
                                                                             Qty:
                                                                         </label>
                                                                         <input
@@ -2010,7 +2010,7 @@ class Cart extends Component {
                                                                         />
                                                                     </div>
                                                                     <button
-                                                                        className="btn btn-sm btn-outline-danger d-flex align-items-center gap-1"
+                                                                        className="btn btn-sm btn-outline-danger d-flex align-items-center gap-1 ml-2"
                                                                         onClick={() =>
                                                                             this.handleClickDelete(
                                                                                 item.id

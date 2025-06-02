@@ -666,46 +666,52 @@
             }
         });
         
-        // Delete supplier functionality
-        $(document).on('click', '.btn-delete', function() {
-            var $this = $(this);
-            const swalWithBootstrapButtons = Swal.mixin({
-                customClass: {
-                    confirmButton: 'btn btn-success',
-                    cancelButton: 'btn btn-danger'
-                },
-                buttonsStyling: false
-            });
+       // Delete supplier functionality
+$(document).on('click', '.btn-delete', function () {
+    var $this = $(this);
+    const swalWithBootstrapButtons = Swal.mixin({
+        customClass: {
+            confirmButton: 'btn btn-success',
+            cancelButton: 'btn btn-danger mr-3'
+        },
+        buttonsStyling: false
+    });
 
-            swalWithBootstrapButtons.fire({
-                title: '{{ __("Are you sure?") }}',
-                text: '{{ __("You won\'t be able to revert this!") }}',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: '{{ __("Yes, delete it!") }}',
-                cancelButtonText: '{{ __("No, cancel!") }}',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.value) {
-                    $.post($this.data('url'), {
-                        _method: 'DELETE',
-                        _token: '{{ csrf_token() }}'
-                    }, function(res) {
-                        $this.closest('tr').fadeOut(500, function() {
-                            $(this).remove();
-                            
-                            // Update card counts after deletion
-                            let totalCount = parseInt($('.card-total .card-value').text()) - 1;
-                            $('.card-total .card-value').text(totalCount);
-                            
-                            // Update other counts as appropriate
-                            let activeCount = parseInt($('.card-active .card-value').text()) - 1;
-                            $('.card-active .card-value').text(activeCount);
-                        });
-                    });
-                }
+    swalWithBootstrapButtons.fire({
+        title: 'Are you sure?',
+        text: "Do you really want to delete this supplier? You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: '<i class="fas fa-trash mr-1"></i>Yes, delete it!',
+        cancelButtonText: '<i class="fas fa-times mr-1"></i>No, cancel',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.value) {
+            $.post($this.data('url'), {
+                _method: 'DELETE',
+                _token: '{{ csrf_token() }}'
+            }, function (res) {
+                $this.closest('tr').fadeOut(500, function () {
+                    $(this).remove();
+
+                    // Update total count
+                    let totalCount = parseInt($('.card-total .card-value').text()) - 1;
+                    $('.card-total .card-value').text(totalCount);
+
+                    // Update active/inactive counts based on badge class (if available)
+                    if ($this.closest('tr').find('.badge-custom').hasClass('active')) {
+                        let activeCount = parseInt($('.card-active .card-value').text()) - 1;
+                        $('.card-active .card-value').text(activeCount);
+                    } else {
+                        let inactiveCount = parseInt($('.card-inactive .card-value').text()) - 1;
+                        $('.card-inactive .card-value').text(inactiveCount);
+                    }
+                });
             });
-        });
+        }
+    });
+});
+
         
         // Supplier detail view functionality
         $(document).on('click', '.btn-supplier-detail', function(e) {

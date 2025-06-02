@@ -412,7 +412,7 @@
             <div class="card-value">{{ $stats['vip'] ?? 0 }}</div>
             <div class="card-text">
                 <div class="card-title">{{ __('VIP Members') }}</div>
-                <div class="card-description small text-white-50">{{ __('Rp. 100.000+ spent or 5+ orders') }}</div>
+                <div class="card-description small text-white-50">{{ __('Made more than 5 purchases') }}</div>
             </div>
         </div>
     </div>
@@ -596,20 +596,22 @@
         // Delete customer functionality
         $(document).on('click', '.btn-delete', function() {
             var $this = $(this);
+            
             const swalWithBootstrapButtons = Swal.mixin({
                 customClass: {
-                    confirmButton: 'btn btn-danger ml-2',
-                    cancelButton: 'btn btn-secondary'
+                    confirmButton: 'btn btn-success',      // Tombol "Yes, delete it!" berwarna hijau
+                    cancelButton: 'btn btn-danger mr-3'    // Tombol "No" berwarna merah + jarak kanan
                 },
                 buttonsStyling: false
             });
+
             swalWithBootstrapButtons.fire({
-                title: '{{ __("Confirm Deletion") }}',
-                text: '{{ __("Are you sure you want to permanently delete this member? This action cannot be undone.") }}',
+                title: '{{ __("customer.sure") }}',
+                text: '{{ __("customer.really_delete") }}',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonText: '<i class="fas fa-trash mr-1"></i> {{ __("Delete") }}',
-                cancelButtonText: '<i class="fas fa-times mr-1"></i> {{ __("Cancel") }}',
+                confirmButtonText: '<i class="fas fa-trash mr-1"></i> {{ __("customer.yes_delete") }}',
+                cancelButtonText: '<i class="fas fa-times mr-1"></i> {{ __("customer.No") }}',
                 reverseButtons: true,
                 backdrop: `
                     rgba(0,0,0,0.4)
@@ -625,28 +627,23 @@
                     }, function(res) {
                         $this.closest('tr').fadeOut(500, function() {
                             $(this).remove();
-                            // Show success message
-                            Swal.fire({
-                                title: '{{ __("Deleted!") }}',
-                                text: '{{ __("The member has been successfully deleted.") }}',
-                                icon: 'success',
-                                timer: 2000,
-                                showConfirmButton: false
-                            });
-                            // Update card counts after deletion
+
+                            // Update card counts
                             let totalCount = parseInt($('.card-total .card-value').text()) - 1;
                             $('.card-total .card-value').text(totalCount);
                         });
                     }).fail(function() {
                         Swal.fire(
                             '{{ __("Error") }}',
-                            '{{ __("There was a problem deleting the member. Please try again.") }}',
+                            '{{ __("customer.error_updating") }}',
                             'error'
                         );
                     });
                 }
             });
         });
+
+
         // Customer detail view functionality
         $(document).on('click', '.btn-customer-detail', function(e) {
             e.preventDefault();

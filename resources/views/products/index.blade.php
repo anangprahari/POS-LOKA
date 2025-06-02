@@ -785,18 +785,18 @@ $(".filter-button").click(function() {
             const swalWithBootstrapButtons = Swal.mixin({
                 customClass: {
                     confirmButton: 'btn btn-success',
-                    cancelButton: 'btn btn-danger'
+                    cancelButton: 'btn btn-danger mr-3'
                 },
                 buttonsStyling: false
             })
 
             swalWithBootstrapButtons.fire({
-                title: '{{ __('product.sure ') }}',
-                text: '{{ __('product.really_delete ') }}',
+                title: '{{ __('product.sure') }}',
+                text: '{{ __('product.really_delete') }}',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonText: '{{ __('product.yes_delete ') }}',
-                cancelButtonText: '{{ __('product.No ') }}',
+                confirmButtonText: '<i class="fas fa-trash mr-1"></i>{{ __('product.yes_delete') }}',
+                cancelButtonText: '<i class="fas fa-times mr-1"></i>{{ __('product.No') }}',
                 reverseButtons: true
             }).then((result) => {
                 if (result.value) {

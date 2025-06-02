@@ -108,7 +108,7 @@ class SupplierController extends Controller
         if (!$supplier) {
             return redirect()->back()->with('error', __('supplier.error_creating'));
         }
-        return redirect()->route('suppliers.index')->with('success', __('supplier.success_creating'));
+        return redirect()->route('suppliers.index')->with('success', __('Success, you supplier have been created.'));
     }
 
     /**
@@ -179,7 +179,7 @@ class SupplierController extends Controller
         if (!$supplier->save()) {
             return redirect()->back()->with('error', __('supplier.error_updating'));
         }
-        return redirect()->route('suppliers.index')->with('success', __('supplier success updating'));
+        return redirect()->route('suppliers.index')->with('success', __('Success, your uppliers have been updated.'));
     }
 
     /**

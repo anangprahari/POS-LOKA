@@ -46,7 +46,6 @@ class UserController extends Controller
             'full_name' => 'Full Name',
             'email' => 'Email',
             'role' => 'Role',
-            'email_verified' => 'Email Verified',
             'created_at' => 'Joined Date',
             'updated_at' => 'Last Updated'
         ];
@@ -60,7 +59,6 @@ class UserController extends Controller
                 $headers['full_name'] => $user->first_name . ' ' . $user->last_name,
                 $headers['email'] => $user->email,
                 $headers['role'] => ucfirst($user->role),
-                $headers['email_verified'] => $user->email_verified_at ? 'Yes' : 'No',
                 $headers['created_at'] => $user->created_at->format('d M Y H:i'),
                 $headers['updated_at'] => $user->updated_at->format('d M Y H:i'),
             ];
@@ -75,7 +73,7 @@ class UserController extends Controller
 
         return (new FastExcel($formattedUsers))
             ->headerStyle($headerStyle)
-            ->download('users_report_' . now()->format('Y_m_d_H_i_s') . '.xlsx');
+            ->download('users_report.xlsx');
     }
 
     public function create()
@@ -109,7 +107,7 @@ class UserController extends Controller
         ]);
 
         return redirect()->route('users.index')
-            ->with('success', __('User created successfully.'));
+            ->with('success', __('Success, you user have been created.'));
     }
 
     public function edit(User $user)
@@ -156,7 +154,7 @@ class UserController extends Controller
         $user->update($data);
 
         return redirect()->route('users.index')
-            ->with('success', __('User updated successfully.'));
+            ->with('success', __('Success, your user have been updated.'));
     }
 
     public function destroy(User $user)

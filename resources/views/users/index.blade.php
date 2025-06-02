@@ -416,6 +416,24 @@
 @endsection
 
 @section('content')
+{{-- <!-- Global Notifications (outside any card) -->
+@if ($message = Session::get('success'))
+    <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+        {{ $message }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+@endif
+@if ($message = Session::get('error'))
+    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+        {{ $message }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+@endif --}}
+
 <div class="row mb-4">
     <div class="col-md-6">
         <div class="search-box">
@@ -506,23 +524,7 @@
     </div>
     
     <div class="card-body table-responsive p-0">
-        @if ($message = Session::get('success'))
-            <div class="alert alert-success alert-dismissible fade show m-3" role="alert">
-                {{ $message }}
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-        @endif
-        @if ($message = Session::get('error'))
-            <div class="alert alert-danger alert-dismissible fade show m-3" role="alert">
-                {{ $message }}
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-        @endif
-
+        <!-- Removed duplicate notifications from here -->
         <table class="table table-hover text-nowrap align-middle">
             <thead>
                 <tr>
@@ -683,43 +685,43 @@
             }
         });
         
-        // Delete user functionality
-        $(document).on('click', '.btn-delete', function() {
-            var $this = $(this);
-            const swalWithBootstrapButtons = Swal.mixin({
-                customClass: {
-                    confirmButton: 'btn btn-success',
-                    cancelButton: 'btn btn-danger'
-                },
-                buttonsStyling: false
-            });
+       // Delete user functionality
+$(document).on('click', '.btn-delete', function () {
+    var $this = $(this);
+    const swalWithBootstrapButtons = Swal.mixin({
+        customClass: {
+            confirmButton: 'btn btn-success',
+            cancelButton: 'btn btn-danger mr-3'
+        },
+        buttonsStyling: false
+    });
 
-            swalWithBootstrapButtons.fire({
-                title: '{{ __('Are you sure?') }}',
-                text: '{{ __('You will not be able to recover this user!') }}',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: '{{ __('Yes, delete it!') }}',
-                cancelButtonText: '{{ __('No, cancel!') }}',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.value) {
-                    $.post($this.data('url'), {
-                        _method: 'DELETE',
-                        _token: '{{ csrf_token() }}'
-                    }, function(res) {
-                        $this.closest('tr').fadeOut(500, function() {
-                            $(this).remove();
-                            
-                            // Update card counts after deletion
-                            let totalCount = parseInt($('.card-total .card-value').text()) - 1;
-                            $('.card-total .card-value').text(totalCount);
-                        });
-                    });
-                }
+    swalWithBootstrapButtons.fire({
+        title: 'Are you sure?',
+        text: "You will not be able to recover this user!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: '<i class="fas fa-trash mr-1"></i>Yes, delete it!',
+        cancelButtonText: '<i class="fas fa-times mr-1"></i>No, cancel',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.value) {
+            $.post($this.data('url'), {
+                _method: 'DELETE',
+                _token: '{{ csrf_token() }}'
+            }, function (res) {
+                $this.closest('tr').fadeOut(500, function () {
+                    $(this).remove();
+
+                    // Update total user count
+                    let totalCount = parseInt($('.card-total .card-value').text()) - 1;
+                    $('.card-total .card-value').text(totalCount);
+                });
             });
-        });
-        
+        }
+    });
+});
+
         // User detail view functionality
         $(document).on('click', '.btn-user-detail', function(e) {
             e.preventDefault();

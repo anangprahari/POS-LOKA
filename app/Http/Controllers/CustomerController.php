@@ -59,7 +59,6 @@ class CustomerController extends Controller
             'phone' => 'Phone',
             'address' => 'Address',
             'status' => 'Status',
-            'total_spent' => 'Total Spent',
             'orders' => 'Orders',
             'last_order' => 'Last Order',
             'joined_date' => 'Joined Date'
@@ -80,7 +79,6 @@ class CustomerController extends Controller
                 $headers['phone'] => $customer->phone,
                 $headers['address'] => $customer->address,
                 $headers['status'] => $customer->isVipCustomer() ? 'VIP' : ($customer->isReturningCustomer() ? 'Returning' : 'Regular'),
-                $headers['total_spent'] => $totalSpent ? 'Rp. ' . number_format($totalSpent, 0, ',', '.') : 'Rp. 0',
                 $headers['orders'] => $orderCount,
                 $headers['last_order'] => $lastOrder ? $lastOrder->created_at->format('d M Y') : '-',
                 $headers['joined_date'] => $customer->created_at->format('d M Y'),
@@ -124,11 +122,16 @@ class CustomerController extends Controller
     {
         return DB::table('customers')
             ->join('orders', 'customers.id', '=', 'orders.customer_id')
-            ->select('customers.id')
+            ->select(
+                'customers.id',
+                DB::raw('SUM(orders.total_amount) as total_spent'),
+                DB::raw('COUNT(orders.id) as total_orders')
+            )
             ->groupBy('customers.id')
             ->havingRaw('SUM(orders.total_amount) > 100000 OR COUNT(orders.id) > 5')
             ->count();
     }
+
 
     /**
      * Show the form for creating a new resource.

@@ -46,6 +46,6 @@ return [
     'sure'              => 'Are you sure?',
     'really_delete'     => 'Do you really want to delete this member?',
     'yes_delete'        => 'Yes, delete it!',
-    'No'                => 'No',
+    'No'                => 'No, cancel',
     'Actions'           => 'Actions',
 ];
