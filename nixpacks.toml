@@ -5,16 +5,13 @@ nixPkgs = [
   "php81Extensions.fileinfo",
   "nodejs-18_x",
   "npm",
-  "curl"  # untuk install composer manual
+  "curl"
 ]
 
 [phases.install]
 cmds = [
-  # install composer secara manual
   "curl -sS https://getcomposer.org/installer | php",
   "mv composer.phar /usr/local/bin/composer",
-  
-  # install Laravel dependencies
   "composer install --no-dev --optimize-autoloader",
   "npm install"
 ]
