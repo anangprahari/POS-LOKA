@@ -592,16 +592,10 @@
                         </p>
                     </div>
                     <div class="social-links">
-                        <a href="#" class="social-link" aria-label="Facebook">
-                            <i class="fab fa-facebook-f"></i>
-                        </a>
-                        <a href="https://www.instagram.com/praf.bude?igsh=MXJ0aHdjMmV2b2sxYQ==" class="social-link" aria-label="Instagram">
+                        <a href="https://www.instagram.com/lokakopi?igsh=eXFjb2h4OHE4ZDJo" class="social-link" aria-label="Instagram">
                             <i class="fab fa-instagram"></i>
                         </a>
-                        <a href="#" class="social-link" aria-label="Twitter">
-                            <i class="fab fa-twitter"></i>
-                        </a>
-                        <a href="#" class="social-link" aria-label="TikTok">
+                        <a href="https://www.tiktok.com/@loka.kopi?_t=ZS-8wyGTXjUgxW&_r=1" class="social-link" aria-label="TikTok">
                             <i class="fab fa-tiktok"></i>
                         </a>
                     </div>
