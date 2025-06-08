@@ -77,7 +77,7 @@
                 @if (Route::has('register'))
                     <a href="{{ route('register') }}">
                         <i class="fas fa-user-plus"></i> 
-                        Register a new membership
+                        Register a new user
                     </a>
                 @endif
             </div>
