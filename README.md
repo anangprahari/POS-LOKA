@@ -1,125 +1,194 @@
 <p align="center">
-    <h1 align="center">POS System Using Laravel</h1>
+    <h1 align="center">POS System KOPI LOKA</h1>
 </p>
 
-The project was created while recording video "[Create POS System Using Laravel](https://www.youtube.com/watch?v=Y_NRk0lOOJc&list=PL2hV0q47BY-G9f5xG9Vq-wGjSyy1BekOv)"
+Sistem Point of Sale (POS) khusus untuk produk kopi KOPI LOKA yang dibangun menggunakan Laravel 10 dengan integrasi React untuk pengalaman pengguna yang modern dan responsif.
 
-## Installation
+## 🚀 Fitur Utama
 
-### Requirements
+- **Manajemen Produk Kopi** - Kelola berbagai varian kopi KOPI LOKA
+- **Sistem Kasir** - Interface yang mudah digunakan untuk transaksi
+- **Manajemen Pelanggan** - Database pelanggan dan riwayat pembelian
+- **Laporan Penjualan** - Analytics dan reporting lengkap
+- **Multi Payment** - Dukungan berbagai metode pembayaran
+- **Responsive Design** - Dapat diakses dari berbagai perangkat
 
-For system requirements you [Check Laravel Requirement](https://laravel.com/docs/10.x/deployment#server-requirements)
+## 📋 Requirements
 
-### Clone the repository from github.
+Untuk menjalankan sistem ini, pastikan server Anda memenuhi [Laravel 10 Requirements](https://laravel.com/docs/10.x/deployment#server-requirements):
 
-    git clone https://github.com/angkosal/laravel-pos.git [YourDirectoryName]
+- PHP >= 8.1    
+- Composer
+- Node.js & NPM
+- MySQL
+- Web Server (Apache/Nginx)
 
-The command installs the project in a directory named `YourDirectoryName`. You can choose a different
-directory name if you want.
+## 🛠️ Instalasi
 
-### Install dependencies
+### 1. Clone Repository
 
-Laravel utilizes [Composer](https://getcomposer.org/) to manage its dependencies. So, before using Laravel, make sure you have Composer installed on your machine.
+```bash
+git clone https://github.com/anangprahari/POS-LOKA.git
+cd POS-LOKA
+```
 
-    cd YourDirectoryName
-    composer install
+### 2. Install Dependencies
 
-### Config file
+Install PHP dependencies menggunakan Composer:
 
-Rename or copy `.env.example` file to `.env` 1.`php artisan key:generate` to generate app key.
+```bash
+composer install
+```
 
-1. Set your database credentials in your `.env` file
-1. Set your `APP_URL` in your `.env` file.
+### 3. Environment Configuration
 
-### Database
+Buat file konfigurasi environment:
 
-1. Migrate database table `php artisan migrate`
-1. `php artisan db:seed`, this will initialize settings and create and admin user for you [email: admin@gmail.com - password: admin123]
+```bash
+cp .env.example .env
+```
 
-### Install Node Dependencies
+Generate application key:
 
-1. `npm install` to install node dependencies
-1. `npm run dev` for development or `npm run build` for production
+```bash
+php artisan key:generate
+```
 
-### Create storage link
+### 4. Database Setup
 
-`php artisan storage:link`
+Atur konfigurasi database di file `.env`:
 
-### Run Server
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=pos_loka
+DB_USERNAME=your_username
+DB_PASSWORD=your_password
+```
 
-1. `php artisan serve` or Laravel Homestead
-1. Visit `localhost:8000` in your browser. Email: `admin@gmail.com`, Password: `admin123`.
- <!-- 1. Online demo: [pos.khmernokor.com](https://pos.khmernokor.com/) -->
+Atur juga `APP_URL` sesuai dengan domain Anda:
 
-### Screenshots
+```env
+APP_URL=http://localhost:8000
+```
 
-#### Product list
+### 5. Database Migration & Seeding
 
-![Product list](https://raw.githubusercontent.com/angkosal/laravel-pos/master/screenshots/products_list.png)
+Jalankan migrasi database:
 
-#### Create order
+```bash
+php artisan migrate
+```
 
-![Create order](https://raw.githubusercontent.com/angkosal/laravel-pos/master/screenshots/pos.png)
+Jalankan seeder untuk data awal:
 
-#### Order list
+```bash
+php artisan db:seed
+```
 
-![Order list](https://raw.githubusercontent.com/angkosal/laravel-pos/master/screenshots/order_list.png)
+Seeder akan membuat:
+- Admin user default: `anangpraf04@gmail.com` / `anangpraf123`
+- Data produk kopi KOPI LOKA
+- Pengaturan sistem dasar
 
-#### Customer list
+### 6. Install Node Dependencies
 
-![Customer list](https://raw.githubusercontent.com/angkosal/laravel-pos/master/screenshots/customer_list.png)
+Install dependencies untuk React dan asset compilation:
 
-[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/angkosal)
+```bash
+npm install
+```
+
+Untuk development:
+```bash
+npm run dev
+```
+
+Untuk production:
+```bash
+npm run build
+```
+
+### 7. Storage Link
+
+Buat symbolic link untuk storage:
+
+```bash
+php artisan storage:link
+```
+
+### 8. Jalankan Server
+
+Start Laravel development server:
+
+```bash
+php artisan serve
+```
+
+Akses aplikasi di `http://localhost:8000`
+
+**Login Credentials:**
+- Email: `anangpraf04@gmail.com`
+- Password: `anangpraf123`
 
 
-# 🌟 Or Khmernokor POS :)
+## 🏗️ Struktur Teknologi
 
-[Khmernokor POS](https://pos.khmernokor.com) is a modern and efficient Point of Sale system tailored for restaurants, cafés, and retail businesses. Built with a focus on usability, speed, and flexibility, it provides an all-in-one solution for front-of-house and back-of-house operations.
+- **Backend**: Laravel 10
+- **Frontend**: React.js
+- **Database**: MySQL
+- **Styling**: Bootstrap
+- **Package Manager**: Composer (PHP) & NPM (Node.js)
+
+## 📂 Struktur Project
+
+```
+POS-LOKA/
+├── app/                    # Laravel application logic
+├── database/               # Migrations, seeders, factories
+├── public/                 # Public assets
+├── resources/              # Views, React components, CSS
+├── routes/                 # Application routes
+├── storage/                # File storage
+└── README.md              # This file
+```
+
+## 🔧 Development
+
+Untuk development mode:
+
+```bash
+# Start Laravel server
+php artisan serve
+
+# Watch for changes (in another terminal)
+npm run dev
+```
+
+## 🚀 Production Deployment
+
+1. Atur environment variables untuk production
+2. Run asset compilation: `npm run build`
+3. Optimize Laravel: `php artisan optimize`
+4. Set proper permissions untuk storage dan bootstrap/cache directories
+
+## 🤝 Contributing
+
+Kontribusi sangat diterima! Silakan buat issue atau pull request untuk perbaikan dan fitur baru.
+
+## 📞 Support
+
+Jika mengalami masalah atau memiliki pertanyaan:
+- Email: anangpraf04@gmail.com
+- GitHub Issues: [Create Issue](https://github.com/anangprahari/POS-LOKA/issues)
+
+## 📄 License
+
+Project ini menggunakan [MIT License](LICENSE).
 
 ---
 
-## 🖥️ POS Screen
-![POS Screen](https://raw.githubusercontent.com/angkosal/laravel-pos/master/screenshots/khmernokor-pos/pos.png)
-
-The POS interface is clean, responsive, and optimized for quick ordering. Cashiers and servers can easily select items, apply discounts, manage tables, and process various payment methods efficiently.
-
----
-
-## 🖨️ Kitchen Printer
-![Kitchen Printer](https://raw.githubusercontent.com/angkosal/laravel-pos/master/screenshots/khmernokor-pos/kitchen-printer.jpg)
-
-Orders placed via the POS are instantly sent to the kitchen printer. This ensures accurate, printed tickets that help kitchen staff prepare dishes quickly and with minimal error.
-
----
-
-## 🍽️ Kitchen Display System (KDS)
-![Kitchen Display](https://raw.githubusercontent.com/angkosal/laravel-pos/master/screenshots/khmernokor-pos/kitchen-display.png)
-
-Replace traditional printed tickets with a digital kitchen display. Staff can view and manage incoming orders in real time, mark items as complete, and streamline food preparation.
-
----
-
-## 🧾 Receipt Preview
-![Receipt Preview](https://raw.githubusercontent.com/angkosal/laravel-pos/master/screenshots/khmernokor-pos/receipt-preview.png)
-
-Preview and print receipts with detailed breakdowns of items, quantities, discounts, taxes, and total amounts—customizable to suit your business branding.
-
----
-
-## 🖨️ Cashier Printer
-![Cashier Printer](https://raw.githubusercontent.com/angkosal/laravel-pos/master/screenshots/khmernokor-pos/cashier-printer.jpg)
-
-Print high-quality receipts at the cashier station for customers upon checkout. Reliable and fast printing supports smooth and professional transactions.
-
----
-
-## 📱 QR Menu for Customers ordering
-<!-- ![QR Menu](https://raw.githubusercontent.com/angkosal/laravel-pos/master/screenshots/khmernokor-pos/qr-menu.png) -->
-
-Let customers scan a QR code to view the digital menu on their phones. This contactless feature enhances the dining experience while reducing the need for physical menus.
-
----
-
-Khmernokor POS is your complete solution for managing restaurant operations—from order taking and kitchen coordination to payment and reporting.
-
-🔗 [Explore more at pos.khmernokor.com](https://pos.khmernokor.com)
+<p align="center">
+    <strong>Dibuat dengan ❤️ untuk KOPI LOKA</strong>
+</p>
